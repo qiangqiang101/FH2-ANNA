@@ -14,7 +14,7 @@
 //  - HUDStatusAnna+0x130: ObservableCollection<AnnaCommandItem> (OptionsList): its list at
 //    +0x50, the count at list+0x30, the items at [[list+0x28]+0x28].
 //  - AnnaCommandItem (0x48 bytes): Command, an AVUI String*, at +0x38; IsSelected, a byte, at
-//    +0x40 (property 0xAAC210); 0xAA14A0(item, property) raises PropertyChanged.
+//    +0x40 (property 0xAAC210; Command's 0xAABEF0); 0xAA14A0(item, property) raises PropertyChanged.
 //  - HUDStatusAnna's own functions, as HUDAnnaComponent uses them (0x755600 / 0x755700):
 //    0xA99F60(status) empties the list; 0xA987B0(status, String*&) adds a command and, the first
 //    time, raises its ShowFull event (the control wakes, with ANNA's sound); 0xAA77F0(status,
@@ -25,6 +25,8 @@
 #include "car.h"
 #include "drive.h"
 #include "cinematic.h"
+#include "lang.h"
+#include "pause.h"
 #include "common.h"
 #include "fh2anna.h"
 
@@ -69,13 +71,15 @@ constexpr uintptr_t RVA_GET_MODE_CALL = 0x74D7FD;   // HUDAnnaComponent update: 
 constexpr uintptr_t RVA_SET_MODE_CALL = 0x74D80F;   // ... call 0xAACCD0(status, mode)
 constexpr uintptr_t RVA_ITEM_NOTIFY   = 0xAA14A0;   // (item, property)
 constexpr uintptr_t RVA_SELECTED_PROP = 0xAAC210;   // AnnaCommandItem::IsSelected's property
-constexpr uintptr_t RVA_AVUI_STRING   = 0x1663220;  // String* (String* out, const char*, int length or -1)
+constexpr uintptr_t RVA_COMMAND_PROP  = 0xAABEF0;   // AnnaCommandItem::Command's property
+constexpr uintptr_t RVA_AVUI_WSTRING  = 0x13FE8E0;  // String** (String** out, const wchar_t*): a new String, its reference ours
 constexpr uintptr_t RVA_STATUS_CLEAR  = 0xA99F60;   // (status)
 constexpr uintptr_t RVA_STATUS_ADD    = 0xA987B0;   // (status, String*&), releases the String
 constexpr uintptr_t RVA_STATUS_SELECT = 0xAA77F0;   // (status, String*&), releases the String
 constexpr uintptr_t RVA_STATUS_SLEEP  = 0xAA9BE0;   // (status)
 constexpr uintptr_t STATUS_ITEMS      = 0x130;
 constexpr uintptr_t ITEM_SELECTED     = 0x40;
+constexpr uintptr_t ITEM_COMMAND      = 0x38;
 constexpr int kModeMapOnly            = 2;   // Options/Map's "on" on PC
 constexpr int kModeAnna               = 3;   // the map and ANNA (asleep until opened)
 constexpr DWORD kChosenMs             = 700;   // ANNA shows a choice this long, then closes
@@ -85,18 +89,17 @@ using GetModeFn   = int (*)(uint8_t* status);
 using SetModeFn   = void (*)(uint8_t* status, int mode);
 using NotifyFn    = void (*)(uint8_t* item, void* prop);
 using PropFn      = void* (*)();
-using StringFn    = void* (*)(void* out, const char* text, int length);
+using StringFn    = void* (*)(void** out, const wchar_t* text);
 using StatusFn    = void (*)(uint8_t* status);
 using StatusStrFn = void (*)(uint8_t* status, uint8_t** text);
 
 GetModeFn o_get_mode = nullptr;
 SetModeFn o_set_mode = nullptr;
 
-uint8_t* avui_string(const char* text) {
-    auto* s = new uint8_t[0x80]();   // ours for good: one reference of ours is never let go
-    game<StringFn>(RVA_AVUI_STRING)(s, text, -1);
-    InterlockedIncrement(reinterpret_cast<volatile LONG*>(s + 0x10));
-    return s;
+uint8_t* avui_string(const char* text) {   // UTF-8 in (any language's text); ours for good
+    void* s = nullptr;
+    game<StringFn>(RVA_AVUI_WSTRING)(&s, wide(text).c_str());
+    return static_cast<uint8_t*>(s);
 }
 
 // Calls a HUDStatusAnna function that takes a String*& and releases it: with a reference for it.
@@ -134,6 +137,7 @@ bool can_grey(const std::string& label) {
     return false;
 }
 
+// For the control's XAML (UTF-8: it goes to the game with a BOM, see anna_xaml.cpp).
 std::string xml_escaped(const std::string& s) {
     std::string o;
     for (char c : s) {
@@ -231,21 +235,47 @@ const char kMoreDown[] = "FH2ANNA_MORE_DOWN";
 const char kMoreNone[] = "FH2ANNA_MORE_NONE";
 int g_first        = 0;   // the first entry showing (the HUD's thread)
 
-// ANNA's list: entries g_first .. g_first + kRows of the list.
-void fill_window(uint8_t* status) {
-    game<StatusFn>(RVA_STATUS_CLEAR)(status);
-    g_menu.items.clear();
-    const int n       = static_cast<int>(g_menu.texts.size());
-    const bool up     = n > kRows;   // the marker rows
-    const bool down   = n > kRows;
-    if (up) with_text(RVA_STATUS_ADD, status, text_for(g_first > 0 ? kMoreUp : kMoreNone));
-    for (int i = g_first; i < n && i < g_first + kRows; ++i) with_text(RVA_STATUS_ADD, status, text_for(g_menu.texts[i]));
-    if (down) with_text(RVA_STATUS_ADD, status, text_for(g_first + kRows < n ? kMoreDown : kMoreNone));
+// The list's items, the marker rows' too.
+std::vector<uint8_t*> list_items(uint8_t* status) {
     void* collection = *reinterpret_cast<void**>(status + STATUS_ITEMS);
     uint8_t* lst     = collection ? *reinterpret_cast<uint8_t**>(static_cast<uint8_t*>(collection) + 0x50) : nullptr;
     const int count  = lst ? *reinterpret_cast<int*>(lst + 0x30) : 0;
-    uint8_t** arr    = lst ? *reinterpret_cast<uint8_t***>(*reinterpret_cast<uint8_t**>(lst + 0x28) + 0x28) : nullptr;
-    for (int i = up ? 1 : 0; arr && i < count - (down ? 1 : 0); ++i) g_menu.items.push_back(arr[i]);   // the entries' rows
+    uint8_t** arr    = lst && count > 0 ? *reinterpret_cast<uint8_t***>(*reinterpret_cast<uint8_t**>(lst + 0x28) + 0x28) : nullptr;
+    return arr ? std::vector<uint8_t*>(arr, arr + count) : std::vector<uint8_t*>{};
+}
+
+// A row's text, changed where it is. The row template's arc triggers (one per list length and
+// row, each binding up the tree) run when a row is made: remaking the rows to scroll or relabel
+// them took the game from 160 fps to 30 for a while. The item holds a reference to its String;
+// ours (text_for's) are never let go, so the old one's reference is simply dropped.
+void set_item_text(uint8_t* item, uint8_t* text) {
+    auto** slot = reinterpret_cast<uint8_t**>(item + ITEM_COMMAND);
+    if (*slot == text) return;
+    InterlockedIncrement(reinterpret_cast<volatile LONG*>(text + 0x10));
+    uint8_t* old = *slot;
+    *slot        = text;
+    if (old) InterlockedDecrement(reinterpret_cast<volatile LONG*>(old + 0x10));
+    game<NotifyFn>(RVA_ITEM_NOTIFY)(item, game<PropFn>(RVA_COMMAND_PROP)());
+}
+
+// ANNA's list: entries g_first .. g_first + kRows of the list. With as many rows as are there
+// already, their texts change in place; otherwise the list is made again.
+void fill_window(uint8_t* status) {
+    const int n       = static_cast<int>(g_menu.texts.size());
+    const bool more   = n > kRows;   // the marker rows, above and below
+    std::vector<uint8_t*> want;
+    if (more) want.push_back(text_for(g_first > 0 ? kMoreUp : kMoreNone));
+    for (int i = g_first; i < n && i < g_first + kRows; ++i) want.push_back(text_for(g_menu.texts[i]));
+    if (more) want.push_back(text_for(g_first + kRows < n ? kMoreDown : kMoreNone));
+    std::vector<uint8_t*> rows = list_items(status);
+    if (!rows.empty() && rows.size() == want.size()) {
+        for (std::size_t i = 0; i < rows.size(); ++i) set_item_text(rows[i], want[i]);
+    } else {
+        game<StatusFn>(RVA_STATUS_CLEAR)(status);
+        for (uint8_t* t : want) with_text(RVA_STATUS_ADD, status, t);
+        rows = list_items(status);
+    }
+    g_menu.items.assign(rows.begin() + (more && !rows.empty() ? 1 : 0), rows.end() - (more && rows.size() > 1 ? 1 : 0));   // the entries' rows
 }
 
 // `index` in the whole list.
@@ -286,7 +316,7 @@ void show_list(uint8_t* status, const std::string& list) {
         const bool off = !enabled_now(e) && can_grey(e.label);
         const char* now = e.label_now ? e.label_now(e.user, e.key.c_str()) : nullptr;
         g_menu.shown.push_back(e);
-        g_menu.texts.push_back(off ? kOff + e.label : now && *now ? now : e.label);
+        g_menu.texts.push_back(off ? kOff + e.label : tr(now && *now ? now : e.label.c_str()));   // greyed: its trigger shows it translated
         g_menu.off.push_back(off);
     }
     g_status = status;
@@ -452,6 +482,14 @@ void choose_headlights(void*, const char*) {
     if (car) set_headlights(car, !headlights_on(car));
 }
 void choose_route(void* user, const char*) { set_route(static_cast<Route>(reinterpret_cast<uintptr_t>(user))); }
+// The pause menu's tiles (pause.cpp): shown once the pause flow's been seen waiting for Start.
+int pause_shown(void*, const char*) { return pause_available(); }
+void choose_tile(void* user, const char*) { press_pause_tile(static_cast<PauseTile>(reinterpret_cast<uintptr_t>(user))); }
+void choose_session(void* user, const char*) { start_matchmaking(static_cast<Session>(reinterpret_cast<uintptr_t>(user))); }
+
+// "Start Matchmaking for" in ANNA (on unless the Mods page says off).
+std::atomic<bool> g_matchmaking{true};
+int matchmaking_shown(void*, const char*) { return g_matchmaking.load() && pause_available(); }
 
 std::wstring g_ini;   // fh2-mods\FH2ANNA.ini
 
@@ -475,8 +513,8 @@ void hood_trunk_setting() {
     FH2Setting s{};
     s.size        = sizeof s;
     s.key         = "HideHoodTrunk";
-    s.label       = "Hide hood and trunk in ANNA";
-    s.description = "Car > Doors leaves out the hood and the trunk, and Open All leaves them shut: for cars with an invisible trunk or a fake engine under the hood.";
+    s.label       = tr("Hide hood and trunk in ANNA");
+    s.description = tr("Car > Doors leaves out the hood and the trunk, and Open All leaves them shut: for cars with an invisible trunk or a fake engine under the hood.");
     s.value       = g_hide_hood_trunk.load() ? 1 : 0;
     s.on_change   = hood_trunk_changed;
     g_api->add_setting(g_mod, &s);
@@ -484,11 +522,23 @@ void hood_trunk_setting() {
     FH2Setting m{};
     m.size        = sizeof m;
     m.key         = "CloseWhenMoving";
-    m.label       = "Close doors when moving";
-    m.description = "The doors, hood, trunk and storage ANNA opened shut by themselves once the car drives off. The roof stays as it is.";
+    m.label       = tr("Close doors when moving");
+    m.description = tr("The doors, hood, trunk and storage ANNA opened shut by themselves once the car drives off. The roof stays as it is.");
     m.value       = g_close_moving.load() ? 1 : 0;
     m.on_change   = close_moving_changed;
     g_api->add_setting(g_mod, &m);
+    g_matchmaking = GetPrivateProfileIntW(L"Online", L"Matchmaking", 1, g_ini.c_str()) != 0;
+    FH2Setting o{};
+    o.size        = sizeof o;
+    o.key         = "Matchmaking";
+    o.label       = tr("Start Matchmaking in ANNA");
+    o.description = tr("ANNA's \"Start Matchmaking for\" list: Online Road Trip, Online Freeroam, and their private sessions, started without the pause menu.");
+    o.value       = g_matchmaking.load() ? 1 : 0;
+    o.on_change   = [](void*, const char*, int value) {
+        g_matchmaking = value != 0;
+        WritePrivateProfileStringW(L"Online", L"Matchmaking", value ? L"1" : L"0", g_ini.c_str());
+    };
+    g_api->add_setting(g_mod, &o);
 }
 
 void add_own_entries() {
@@ -512,12 +562,20 @@ void add_own_entries() {
     add("car.doors", "car", "Doors");
     add("car.doors.all", "car.doors", "Open All", choose_all, all_shown, all_label);
     for (int i = 0; i < kParts; ++i) add(kPartKeys[i], "car.doors", kPartLabels[i], choose_part, part_shown, part_label);
+    add("car.tune", "car", "Tune Car", choose_tile, pause_shown, nullptr, reinterpret_cast<void*>(PauseTile::TuneCar));
     add("route", nullptr, "Set Route To Nearest");
     add("route.race", "route", "Race", choose_route, nullptr, nullptr, reinterpret_cast<void*>(Route::Race));
     add("route.bucketlist", "route", "Bucket List", choose_route, nullptr, nullptr, reinterpret_cast<void*>(Route::BucketList));
     add("route.festival", "route", "Festival", choose_route, nullptr, nullptr, reinterpret_cast<void*>(Route::Festival));
     add("route.barnfind", "route", "Barn Find", choose_route, nullptr, nullptr, reinterpret_cast<void*>(Route::BarnFind));
     add("route.bonusboard", "route", "Bonus Board", choose_route, nullptr, nullptr, reinterpret_cast<void*>(Route::BonusBoard));
+    add("online", nullptr, "Start Matchmaking for", nullptr, matchmaking_shown);
+    add("online.roadtrip", "online", "Online Road Trip", choose_session, nullptr, nullptr, reinterpret_cast<void*>(Session::RoadTrip));
+    add("online.freeroam", "online", "Online Freeroam", choose_session, nullptr, nullptr, reinterpret_cast<void*>(Session::FreeRoam));
+    add("online.private.roadtrip", "online", "Private Online Road Trip", choose_session, nullptr, nullptr,
+        reinterpret_cast<void*>(Session::PrivateRoadTrip));
+    add("online.private.freeroam", "online", "Private Online Freeroam", choose_session, nullptr, nullptr,
+        reinterpret_cast<void*>(Session::PrivateFreeRoam));
 }
 
 // ---- input ----------------------------------------------------------------------------------
@@ -647,6 +705,7 @@ uintptr_t d_input_update(void* inputs, float dt) {
     uint8_t* all       = *reinterpret_cast<uint8_t**>(g_base + RVA_INPUTS);
     uint8_t* input     = all ? *reinterpret_cast<uint8_t**>(all + INPUTS_CURRENT) : nullptr;
     if (!failed && input && !read_pad_guarded(input)) failed = true, logf("crashed reading the pad; the d-pad doesn't work ANNA");
+    pause_tick();
     return r;
 }
 
@@ -752,7 +811,11 @@ const FH2AnnaApi kApi = {sizeof(FH2AnnaApi), &api_is_open, &api_uses_key, &add_e
 DWORD WINAPI start(LPVOID) {
     g_base = static_cast<uint8_t*>(g_api->wait_for_code(0xFFFFFFFFu));
     if (!g_base) return 0;
+    // First: the HUD reads its ANNA control's XAML once, soon after the code is up, and the
+    // hooks below take a while (each one waits for the game's threads).
+    if (!hook_anna_xaml()) logf("couldn't hook the ANNA control's XAML: ANNA keeps FH2's look");
     if (!hook_routes()) logf("the navigation module isn't as expected: no routes");
+    if (!hook_pause()) logf("the pause menu's code isn't as expected: no Tune Car or matchmaking");
     if (!hook_drive()) logf("some of the car's code isn't as expected: indicators or autodrive may not work");
     if (!hook_headlight_reads()) logf("the game's headlight reads aren't as expected: Extra Options' headlight key may hold ANNA's off");
     if (!hook_headlight_beams()) logf("the lights' upload isn't as expected: headlights on may only show in the dark");
@@ -774,7 +837,6 @@ DWORD WINAPI start(LPVOID) {
         return 0;
     }
     if (!hook_cinematic()) logf("autodrive's cinematic camera keeps the HUD on");
-    if (!hook_anna_xaml()) logf("couldn't hook the ANNA control's XAML: ANNA keeps FH2's look");
     g_ready = true;
     logf("ready: a tap of D-pad down opens ANNA (keys: a keyboard mod's, on the pad's buttons)");
     return 0;
@@ -801,7 +863,7 @@ std::string disabled_triggers() {
     }
     std::string x;
     for (const std::string& l : labels) {
-        const std::string text = xml_escaped(l), command = xml_escaped(kOff + l);
+        const std::string text = xml_escaped(tr(l.c_str())), command = xml_escaped(kOff + l);
         x += "<DataTrigger Binding=\"{Binding Command}\" Value=\"" + command + "\">\n"
              "    <Setter TargetName=\"Label\" Property=\"Text\" Value=\"" + text + "\" />\n"
              "    <Setter TargetName=\"Label\" Property=\"Color\" Value=\"#70FFFFFF\" />\n"
@@ -841,6 +903,7 @@ FH2MOD_EXPORT int fh2mod_init(const FH2ModApi* api) {
     GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
                        reinterpret_cast<LPCWSTR>(&fh2mod_init), &self);
     write_textures(self);
+    lang_init(std::wstring(api->azimuth_dir) + L"\\fh2-mods\\FH2ANNA.ini");
     cinematic_settings();
     hood_trunk_setting();
     add_own_entries();

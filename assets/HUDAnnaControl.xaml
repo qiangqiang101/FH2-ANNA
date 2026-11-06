@@ -183,14 +183,14 @@
 
             <!-- pgPaulP - Data template for the speech items in the anna popup -->
             <DataTemplate x:Key="A_DataTemplate_SpeechItem">
-                <Grid x:Name="Row" Width="307" Height="36" Margin="0,1.5,0,1.5">
-                    <Path x:Name="Back" HorizontalAlignment="Left" VerticalAlignment="Top" Fill="#B0383838" Data="M0,0 L268,0 L268,36 L0,36 Z"/>
-                    <local:FZTextBlock x:Name="Label" Text="{Binding Command}" Style="{StaticResource FH2ANNA_Text}" Margin="0,0,47,0" Width="{StaticResource A_Double_SpeechOptionWidth}" VerticalAlignment="Center" HorizontalAlignment="Right" />
-                    <local:FZMaterial x:Name="MoreUp" Visibility="Collapsed" ImageSource="/ForzaUI;component/Textures/Anthem/SocialFeedIcons/Scroll_Arrow.png" Width="34" Height="16" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="117,0,0,0" RenderTransformOrigin="0.5,0.5">
+                <Grid x:Name="Row" Width="355" Height="34" Margin="0,1.5,0,1.5">
+                    <Path x:Name="Back" HorizontalAlignment="Left" VerticalAlignment="Top" Fill="#B0383838" Data="M0,0 L318,0 L318,34 L0,34 Z"/>
+                    <local:FZTextBlock x:Name="Label" Text="{Binding Command}" Style="{StaticResource FH2ANNA_Text}" FontSize="25" Margin="0,-1,45,1" Width="{StaticResource A_Double_SpeechOptionWidth}" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                    <local:FZMaterial x:Name="MoreUp" Visibility="Collapsed" ImageSource="/ForzaUI;component/Textures/Anthem/SocialFeedIcons/Scroll_Arrow.png" Width="34" Height="16" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="142,0,0,0" RenderTransformOrigin="0.5,0.5">
                         <local:FZMaterial.RenderTransform><RotateTransform Angle="180"/></local:FZMaterial.RenderTransform>
                     </local:FZMaterial>
-                    <local:FZMaterial x:Name="MoreDown" Visibility="Collapsed" ImageSource="/ForzaUI;component/Textures/Anthem/SocialFeedIcons/Scroll_Arrow.png" Width="34" Height="16" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="117,0,0,0" />
-                    <local:FZMaterial x:Name="Dpad" HorizontalAlignment="Right" Width="36" Height="36" Color="#FF1A1A1A" Visibility="Hidden">
+                    <local:FZMaterial x:Name="MoreDown" Visibility="Collapsed" ImageSource="/ForzaUI;component/Textures/Anthem/SocialFeedIcons/Scroll_Arrow.png" Width="34" Height="16" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="142,0,0,0" />
+                    <local:FZMaterial x:Name="Dpad" HorizontalAlignment="Right" Width="34" Height="34" Color="#FF1A1A1A" Visibility="Hidden">
                         <local:FZMaterial ImageSource="{StaticResource FH2ANNA_Icon_Choose}" Width="28" Height="28" Color="White" />
                     </local:FZMaterial>
                 </Grid>
@@ -224,735 +224,735 @@
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="1"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="0"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M29.9,0 L268,0 L268,36 L29.9,36.0 L30.3,33.0 L30.5,30.0 L30.7,27.0 L30.9,24.0 L31.0,21.0 L31.0,18.0 L31.0,15.0 L30.9,12.0 L30.7,9.0 L30.5,6.0 L30.3,3.0 L29.9,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M80.1,0 L318,0 L318,34 L80.1,34.0 L80.3,31.2 L80.6,28.3 L80.8,25.5 L80.9,22.7 L81.0,19.8 L81.0,17.0 L81.0,14.2 L80.9,11.3 L80.8,8.5 L80.6,5.7 L80.3,2.8 L80.1,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="2"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="0"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M26.3,0 L268,0 L268,36 L31.0,36.0 L30.9,33.0 L30.8,30.0 L30.6,27.0 L30.4,24.0 L30.1,21.0 L29.8,18.0 L29.3,15.0 L28.9,12.0 L28.3,9.0 L27.7,6.0 L27.1,3.0 L26.3,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M76.8,0 L318,0 L318,34 L81.0,34.0 L80.9,31.2 L80.8,28.3 L80.7,25.5 L80.5,22.7 L80.2,19.8 L79.9,17.0 L79.5,14.2 L79.1,11.3 L78.6,8.5 L78.1,5.7 L77.5,2.8 L76.8,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="2"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="1"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M31.0,0 L268,0 L268,36 L26.3,36.0 L27.1,33.0 L27.7,30.0 L28.3,27.0 L28.9,24.0 L29.3,21.0 L29.8,18.0 L30.1,15.0 L30.4,12.0 L30.6,9.0 L30.8,6.0 L30.9,3.0 L31.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M81.0,0 L318,0 L318,34 L76.8,34.0 L77.5,31.2 L78.1,28.3 L78.6,25.5 L79.1,22.7 L79.5,19.8 L79.9,17.0 L80.2,14.2 L80.5,11.3 L80.7,8.5 L80.8,5.7 L80.9,2.8 L81.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="3"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="0"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M20.0,0 L268,0 L268,36 L29.6,36.0 L29.1,33.0 L28.6,30.0 L28.0,27.0 L27.4,24.0 L26.7,21.0 L25.9,18.0 L25.1,15.0 L24.2,12.0 L23.3,9.0 L22.2,6.0 L21.2,3.0 L20.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M71.2,0 L318,0 L318,34 L79.7,34.0 L79.3,31.2 L78.8,28.3 L78.3,25.5 L77.8,22.7 L77.1,19.8 L76.5,17.0 L75.7,14.2 L74.9,11.3 L74.1,8.5 L73.2,5.7 L72.2,2.8 L71.2,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="3"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="1"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M29.9,0 L268,0 L268,36 L29.9,36.0 L30.3,33.0 L30.5,30.0 L30.7,27.0 L30.9,24.0 L31.0,21.0 L31.0,18.0 L31.0,15.0 L30.9,12.0 L30.7,9.0 L30.5,6.0 L30.3,3.0 L29.9,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M80.1,0 L318,0 L318,34 L80.1,34.0 L80.3,31.2 L80.6,28.3 L80.8,25.5 L80.9,22.7 L81.0,19.8 L81.0,17.0 L81.0,14.2 L80.9,11.3 L80.8,8.5 L80.6,5.7 L80.3,2.8 L80.1,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="3"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="2"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M29.6,0 L268,0 L268,36 L20.0,36.0 L21.2,33.0 L22.2,30.0 L23.3,27.0 L24.2,24.0 L25.1,21.0 L25.9,18.0 L26.7,15.0 L27.4,12.0 L28.0,9.0 L28.6,6.0 L29.1,3.0 L29.6,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M79.7,0 L318,0 L318,34 L71.2,34.0 L72.2,31.2 L73.2,28.3 L74.1,25.5 L74.9,22.7 L75.7,19.8 L76.5,17.0 L77.1,14.2 L77.8,11.3 L78.3,8.5 L78.8,5.7 L79.3,2.8 L79.7,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="4"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="0"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M10.5,0 L268,0 L268,36 L25.5,36.0 L24.7,33.0 L23.8,30.0 L22.8,27.0 L21.7,24.0 L20.6,21.0 L19.4,18.0 L18.1,15.0 L16.7,12.0 L15.3,9.0 L13.8,6.0 L12.2,3.0 L10.5,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M62.7,0 L318,0 L318,34 L76.1,34.0 L75.3,31.2 L74.5,28.3 L73.6,25.5 L72.7,22.7 L71.6,19.8 L70.6,17.0 L69.4,14.2 L68.2,11.3 L67.0,8.5 L65.6,5.7 L64.2,2.8 L62.7,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="4"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="1"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M26.3,0 L268,0 L268,36 L31.0,36.0 L30.9,33.0 L30.8,30.0 L30.6,27.0 L30.4,24.0 L30.1,21.0 L29.8,18.0 L29.3,15.0 L28.9,12.0 L28.3,9.0 L27.7,6.0 L27.1,3.0 L26.3,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M76.8,0 L318,0 L318,34 L81.0,34.0 L80.9,31.2 L80.8,28.3 L80.7,25.5 L80.5,22.7 L80.2,19.8 L79.9,17.0 L79.5,14.2 L79.1,11.3 L78.6,8.5 L78.1,5.7 L77.5,2.8 L76.8,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="4"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="2"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M31.0,0 L268,0 L268,36 L26.3,36.0 L27.1,33.0 L27.7,30.0 L28.3,27.0 L28.9,24.0 L29.3,21.0 L29.8,18.0 L30.1,15.0 L30.4,12.0 L30.6,9.0 L30.8,6.0 L30.9,3.0 L31.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M81.0,0 L318,0 L318,34 L76.8,34.0 L77.5,31.2 L78.1,28.3 L78.6,25.5 L79.1,22.7 L79.5,19.8 L79.9,17.0 L80.2,14.2 L80.5,11.3 L80.7,8.5 L80.8,5.7 L80.9,2.8 L81.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="4"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="3"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M25.5,0 L268,0 L268,36 L10.5,36.0 L12.2,33.0 L13.8,30.0 L15.3,27.0 L16.7,24.0 L18.1,21.0 L19.4,18.0 L20.6,15.0 L21.7,12.0 L22.8,9.0 L23.8,6.0 L24.7,3.0 L25.5,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M76.1,0 L318,0 L318,34 L62.7,34.0 L64.2,31.2 L65.6,28.3 L67.0,25.5 L68.2,22.7 L69.4,19.8 L70.6,17.0 L71.6,14.2 L72.7,11.3 L73.6,8.5 L74.5,5.7 L75.3,2.8 L76.1,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="5"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="0"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L18.7,36.0 L17.4,33.0 L16.0,30.0 L14.6,27.0 L13.0,24.0 L11.4,21.0 L9.6,18.0 L7.8,15.0 L5.9,12.0 L3.9,9.0 L1.7,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M51.0,0 L318,0 L318,34 L70.0,34.0 L68.8,31.2 L67.6,28.3 L66.3,25.5 L64.9,22.7 L63.4,19.8 L61.9,17.0 L60.3,14.2 L58.6,11.3 L56.9,8.5 L55.0,5.7 L53.0,2.8 L51.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="5"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="1"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M20.0,0 L268,0 L268,36 L29.6,36.0 L29.1,33.0 L28.6,30.0 L28.0,27.0 L27.4,24.0 L26.7,21.0 L25.9,18.0 L25.1,15.0 L24.2,12.0 L23.3,9.0 L22.2,6.0 L21.2,3.0 L20.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M71.2,0 L318,0 L318,34 L79.7,34.0 L79.3,31.2 L78.8,28.3 L78.3,25.5 L77.8,22.7 L77.1,19.8 L76.5,17.0 L75.7,14.2 L74.9,11.3 L74.1,8.5 L73.2,5.7 L72.2,2.8 L71.2,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="5"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="2"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M29.9,0 L268,0 L268,36 L29.9,36.0 L30.3,33.0 L30.5,30.0 L30.7,27.0 L30.9,24.0 L31.0,21.0 L31.0,18.0 L31.0,15.0 L30.9,12.0 L30.7,9.0 L30.5,6.0 L30.3,3.0 L29.9,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M80.1,0 L318,0 L318,34 L80.1,34.0 L80.3,31.2 L80.6,28.3 L80.8,25.5 L80.9,22.7 L81.0,19.8 L81.0,17.0 L81.0,14.2 L80.9,11.3 L80.8,8.5 L80.6,5.7 L80.3,2.8 L80.1,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="5"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="3"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M29.6,0 L268,0 L268,36 L20.0,36.0 L21.2,33.0 L22.2,30.0 L23.3,27.0 L24.2,24.0 L25.1,21.0 L25.9,18.0 L26.7,15.0 L27.4,12.0 L28.0,9.0 L28.6,6.0 L29.1,3.0 L29.6,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M79.7,0 L318,0 L318,34 L71.2,34.0 L72.2,31.2 L73.2,28.3 L74.1,25.5 L74.9,22.7 L75.7,19.8 L76.5,17.0 L77.1,14.2 L77.8,11.3 L78.3,8.5 L78.8,5.7 L79.3,2.8 L79.7,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="5"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="4"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M18.7,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L1.7,30.0 L3.9,27.0 L5.9,24.0 L7.8,21.0 L9.6,18.0 L11.4,15.0 L13.0,12.0 L14.6,9.0 L16.0,6.0 L17.4,3.0 L18.7,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M70.0,0 L318,0 L318,34 L51.0,34.0 L53.0,31.2 L55.0,28.3 L56.9,25.5 L58.6,22.7 L60.3,19.8 L61.9,17.0 L63.4,14.2 L64.9,11.3 L66.3,8.5 L67.6,5.7 L68.8,2.8 L70.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="6"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="0"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L8.7,36.0 L6.9,33.0 L4.9,30.0 L2.8,27.0 L0.6,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M34.9,0 L318,0 L318,34 L61.1,34.0 L59.4,31.2 L57.7,28.3 L55.9,25.5 L54.0,22.7 L52.0,19.8 L49.9,17.0 L47.7,14.2 L45.4,11.3 L42.9,8.5 L40.4,5.7 L37.7,2.8 L34.9,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="6"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="1"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M10.5,0 L268,0 L268,36 L25.5,36.0 L24.7,33.0 L23.8,30.0 L22.8,27.0 L21.7,24.0 L20.6,21.0 L19.4,18.0 L18.1,15.0 L16.7,12.0 L15.3,9.0 L13.8,6.0 L12.2,3.0 L10.5,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M62.7,0 L318,0 L318,34 L76.1,34.0 L75.3,31.2 L74.5,28.3 L73.6,25.5 L72.7,22.7 L71.6,19.8 L70.6,17.0 L69.4,14.2 L68.2,11.3 L67.0,8.5 L65.6,5.7 L64.2,2.8 L62.7,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="6"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="2"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M26.3,0 L268,0 L268,36 L31.0,36.0 L30.9,33.0 L30.8,30.0 L30.6,27.0 L30.4,24.0 L30.1,21.0 L29.8,18.0 L29.3,15.0 L28.9,12.0 L28.3,9.0 L27.7,6.0 L27.1,3.0 L26.3,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M76.8,0 L318,0 L318,34 L81.0,34.0 L80.9,31.2 L80.8,28.3 L80.7,25.5 L80.5,22.7 L80.2,19.8 L79.9,17.0 L79.5,14.2 L79.1,11.3 L78.6,8.5 L78.1,5.7 L77.5,2.8 L76.8,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="6"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="3"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M31.0,0 L268,0 L268,36 L26.3,36.0 L27.1,33.0 L27.7,30.0 L28.3,27.0 L28.9,24.0 L29.3,21.0 L29.8,18.0 L30.1,15.0 L30.4,12.0 L30.6,9.0 L30.8,6.0 L30.9,3.0 L31.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M81.0,0 L318,0 L318,34 L76.8,34.0 L77.5,31.2 L78.1,28.3 L78.6,25.5 L79.1,22.7 L79.5,19.8 L79.9,17.0 L80.2,14.2 L80.5,11.3 L80.7,8.5 L80.8,5.7 L80.9,2.8 L81.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="6"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="4"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M25.5,0 L268,0 L268,36 L10.5,36.0 L12.2,33.0 L13.8,30.0 L15.3,27.0 L16.7,24.0 L18.1,21.0 L19.4,18.0 L20.6,15.0 L21.7,12.0 L22.8,9.0 L23.8,6.0 L24.7,3.0 L25.5,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M76.1,0 L318,0 L318,34 L62.7,34.0 L64.2,31.2 L65.6,28.3 L67.0,25.5 L68.2,22.7 L69.4,19.8 L70.6,17.0 L71.6,14.2 L72.7,11.3 L73.6,8.5 L74.5,5.7 L75.3,2.8 L76.1,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="6"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="5"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M8.7,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.6,12.0 L2.8,9.0 L4.9,6.0 L6.9,3.0 L8.7,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M61.1,0 L318,0 L318,34 L34.9,34.0 L37.7,31.2 L40.4,28.3 L42.9,25.5 L45.4,22.7 L47.7,19.8 L49.9,17.0 L52.0,14.2 L54.0,11.3 L55.9,8.5 L57.7,5.7 L59.4,2.8 L61.1,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="7"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="0"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M11.8,0 L318,0 L318,34 L48.7,34.0 L46.5,31.2 L44.1,28.3 L41.6,25.5 L39.0,22.7 L36.2,19.8 L33.3,17.0 L30.2,14.2 L27.0,11.3 L23.5,8.5 L19.9,5.7 L16.0,2.8 L11.8,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="7"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="1"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L18.7,36.0 L17.4,33.0 L16.0,30.0 L14.6,27.0 L13.0,24.0 L11.4,21.0 L9.6,18.0 L7.8,15.0 L5.9,12.0 L3.9,9.0 L1.7,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M51.0,0 L318,0 L318,34 L70.0,34.0 L68.8,31.2 L67.6,28.3 L66.3,25.5 L64.9,22.7 L63.4,19.8 L61.9,17.0 L60.3,14.2 L58.6,11.3 L56.9,8.5 L55.0,5.7 L53.0,2.8 L51.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="7"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="2"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M20.0,0 L268,0 L268,36 L29.6,36.0 L29.1,33.0 L28.6,30.0 L28.0,27.0 L27.4,24.0 L26.7,21.0 L25.9,18.0 L25.1,15.0 L24.2,12.0 L23.3,9.0 L22.2,6.0 L21.2,3.0 L20.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M71.2,0 L318,0 L318,34 L79.7,34.0 L79.3,31.2 L78.8,28.3 L78.3,25.5 L77.8,22.7 L77.1,19.8 L76.5,17.0 L75.7,14.2 L74.9,11.3 L74.1,8.5 L73.2,5.7 L72.2,2.8 L71.2,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="7"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="3"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M29.9,0 L268,0 L268,36 L29.9,36.0 L30.3,33.0 L30.5,30.0 L30.7,27.0 L30.9,24.0 L31.0,21.0 L31.0,18.0 L31.0,15.0 L30.9,12.0 L30.7,9.0 L30.5,6.0 L30.3,3.0 L29.9,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M80.1,0 L318,0 L318,34 L80.1,34.0 L80.3,31.2 L80.6,28.3 L80.8,25.5 L80.9,22.7 L81.0,19.8 L81.0,17.0 L81.0,14.2 L80.9,11.3 L80.8,8.5 L80.6,5.7 L80.3,2.8 L80.1,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="7"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="4"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M29.6,0 L268,0 L268,36 L20.0,36.0 L21.2,33.0 L22.2,30.0 L23.3,27.0 L24.2,24.0 L25.1,21.0 L25.9,18.0 L26.7,15.0 L27.4,12.0 L28.0,9.0 L28.6,6.0 L29.1,3.0 L29.6,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M79.7,0 L318,0 L318,34 L71.2,34.0 L72.2,31.2 L73.2,28.3 L74.1,25.5 L74.9,22.7 L75.7,19.8 L76.5,17.0 L77.1,14.2 L77.8,11.3 L78.3,8.5 L78.8,5.7 L79.3,2.8 L79.7,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="7"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="5"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M18.7,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L1.7,30.0 L3.9,27.0 L5.9,24.0 L7.8,21.0 L9.6,18.0 L11.4,15.0 L13.0,12.0 L14.6,9.0 L16.0,6.0 L17.4,3.0 L18.7,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M70.0,0 L318,0 L318,34 L51.0,34.0 L53.0,31.2 L55.0,28.3 L56.9,25.5 L58.6,22.7 L60.3,19.8 L61.9,17.0 L63.4,14.2 L64.9,11.3 L66.3,8.5 L67.6,5.7 L68.8,2.8 L70.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="7"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="6"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M48.7,0 L318,0 L318,34 L11.8,34.0 L16.0,31.2 L19.9,28.3 L23.5,25.5 L27.0,22.7 L30.2,19.8 L33.3,17.0 L36.2,14.2 L39.0,11.3 L41.6,8.5 L44.1,5.7 L46.5,2.8 L48.7,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="8"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="0"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,22 L0.0,22.0 L0.0,20.2 L0.0,18.3 L0.0,16.5 L0.0,14.7 L0.0,12.8 L0.0,11.0 L0.0,9.2 L0.0,7.3 L0.0,5.5 L0.0,3.7 L0.0,1.8 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M0.9,0 L318,0 L318,22 L31.7,22.0 L29.7,20.2 L27.6,18.3 L25.4,16.5 L23.1,14.7 L20.8,12.8 L18.3,11.0 L15.8,9.2 L13.1,7.3 L10.3,5.5 L7.3,3.7 L4.2,1.8 L0.9,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="8"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="1"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L8.7,36.0 L6.9,33.0 L4.9,30.0 L2.8,27.0 L0.6,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M34.9,0 L318,0 L318,34 L61.1,34.0 L59.4,31.2 L57.7,28.3 L55.9,25.5 L54.0,22.7 L52.0,19.8 L49.9,17.0 L47.7,14.2 L45.4,11.3 L42.9,8.5 L40.4,5.7 L37.7,2.8 L34.9,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="8"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="2"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M10.5,0 L268,0 L268,36 L25.5,36.0 L24.7,33.0 L23.8,30.0 L22.8,27.0 L21.7,24.0 L20.6,21.0 L19.4,18.0 L18.1,15.0 L16.7,12.0 L15.3,9.0 L13.8,6.0 L12.2,3.0 L10.5,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M62.7,0 L318,0 L318,34 L76.1,34.0 L75.3,31.2 L74.5,28.3 L73.6,25.5 L72.7,22.7 L71.6,19.8 L70.6,17.0 L69.4,14.2 L68.2,11.3 L67.0,8.5 L65.6,5.7 L64.2,2.8 L62.7,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="8"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="3"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M26.3,0 L268,0 L268,36 L31.0,36.0 L30.9,33.0 L30.8,30.0 L30.6,27.0 L30.4,24.0 L30.1,21.0 L29.8,18.0 L29.3,15.0 L28.9,12.0 L28.3,9.0 L27.7,6.0 L27.1,3.0 L26.3,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M76.8,0 L318,0 L318,34 L81.0,34.0 L80.9,31.2 L80.8,28.3 L80.7,25.5 L80.5,22.7 L80.2,19.8 L79.9,17.0 L79.5,14.2 L79.1,11.3 L78.6,8.5 L78.1,5.7 L77.5,2.8 L76.8,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="8"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="4"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M31.0,0 L268,0 L268,36 L26.3,36.0 L27.1,33.0 L27.7,30.0 L28.3,27.0 L28.9,24.0 L29.3,21.0 L29.8,18.0 L30.1,15.0 L30.4,12.0 L30.6,9.0 L30.8,6.0 L30.9,3.0 L31.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M81.0,0 L318,0 L318,34 L76.8,34.0 L77.5,31.2 L78.1,28.3 L78.6,25.5 L79.1,22.7 L79.5,19.8 L79.9,17.0 L80.2,14.2 L80.5,11.3 L80.7,8.5 L80.8,5.7 L80.9,2.8 L81.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="8"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="5"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M25.5,0 L268,0 L268,36 L10.5,36.0 L12.2,33.0 L13.8,30.0 L15.3,27.0 L16.7,24.0 L18.1,21.0 L19.4,18.0 L20.6,15.0 L21.7,12.0 L22.8,9.0 L23.8,6.0 L24.7,3.0 L25.5,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M76.1,0 L318,0 L318,34 L62.7,34.0 L64.2,31.2 L65.6,28.3 L67.0,25.5 L68.2,22.7 L69.4,19.8 L70.6,17.0 L71.6,14.2 L72.7,11.3 L73.6,8.5 L74.5,5.7 L75.3,2.8 L76.1,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="8"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="6"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M8.7,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.6,12.0 L2.8,9.0 L4.9,6.0 L6.9,3.0 L8.7,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M61.1,0 L318,0 L318,34 L34.9,34.0 L37.7,31.2 L40.4,28.3 L42.9,25.5 L45.4,22.7 L47.7,19.8 L49.9,17.0 L52.0,14.2 L54.0,11.3 L55.9,8.5 L57.7,5.7 L59.4,2.8 L61.1,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="8"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="7"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,22 L0.0,22.0 L0.0,20.2 L0.0,18.3 L0.0,16.5 L0.0,14.7 L0.0,12.8 L0.0,11.0 L0.0,9.2 L0.0,7.3 L0.0,5.5 L0.0,3.7 L0.0,1.8 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M31.7,0 L318,0 L318,22 L0.9,22.0 L4.2,20.2 L7.3,18.3 L10.3,16.5 L13.1,14.7 L15.8,12.8 L18.3,11.0 L20.8,9.2 L23.1,7.3 L25.4,5.5 L27.6,3.7 L29.7,1.8 L31.7,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="9"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="0"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L318,0 L318,34 L7.0,34.0 L2.1,31.2 L0.0,28.3 L0.0,25.5 L0.0,22.7 L0.0,19.8 L0.0,17.0 L0.0,14.2 L0.0,11.3 L0.0,8.5 L0.0,5.7 L0.0,2.8 L0.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="9"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="1"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M11.8,0 L318,0 L318,34 L48.7,34.0 L46.5,31.2 L44.1,28.3 L41.6,25.5 L39.0,22.7 L36.2,19.8 L33.3,17.0 L30.2,14.2 L27.0,11.3 L23.5,8.5 L19.9,5.7 L16.0,2.8 L11.8,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="9"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="2"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L18.7,36.0 L17.4,33.0 L16.0,30.0 L14.6,27.0 L13.0,24.0 L11.4,21.0 L9.6,18.0 L7.8,15.0 L5.9,12.0 L3.9,9.0 L1.7,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M51.0,0 L318,0 L318,34 L70.0,34.0 L68.8,31.2 L67.6,28.3 L66.3,25.5 L64.9,22.7 L63.4,19.8 L61.9,17.0 L60.3,14.2 L58.6,11.3 L56.9,8.5 L55.0,5.7 L53.0,2.8 L51.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="9"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="3"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M20.0,0 L268,0 L268,36 L29.6,36.0 L29.1,33.0 L28.6,30.0 L28.0,27.0 L27.4,24.0 L26.7,21.0 L25.9,18.0 L25.1,15.0 L24.2,12.0 L23.3,9.0 L22.2,6.0 L21.2,3.0 L20.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M71.2,0 L318,0 L318,34 L79.7,34.0 L79.3,31.2 L78.8,28.3 L78.3,25.5 L77.8,22.7 L77.1,19.8 L76.5,17.0 L75.7,14.2 L74.9,11.3 L74.1,8.5 L73.2,5.7 L72.2,2.8 L71.2,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="9"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="4"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M29.9,0 L268,0 L268,36 L29.9,36.0 L30.3,33.0 L30.5,30.0 L30.7,27.0 L30.9,24.0 L31.0,21.0 L31.0,18.0 L31.0,15.0 L30.9,12.0 L30.7,9.0 L30.5,6.0 L30.3,3.0 L29.9,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M80.1,0 L318,0 L318,34 L80.1,34.0 L80.3,31.2 L80.6,28.3 L80.8,25.5 L80.9,22.7 L81.0,19.8 L81.0,17.0 L81.0,14.2 L80.9,11.3 L80.8,8.5 L80.6,5.7 L80.3,2.8 L80.1,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="9"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="5"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M29.6,0 L268,0 L268,36 L20.0,36.0 L21.2,33.0 L22.2,30.0 L23.3,27.0 L24.2,24.0 L25.1,21.0 L25.9,18.0 L26.7,15.0 L27.4,12.0 L28.0,9.0 L28.6,6.0 L29.1,3.0 L29.6,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M79.7,0 L318,0 L318,34 L71.2,34.0 L72.2,31.2 L73.2,28.3 L74.1,25.5 L74.9,22.7 L75.7,19.8 L76.5,17.0 L77.1,14.2 L77.8,11.3 L78.3,8.5 L78.8,5.7 L79.3,2.8 L79.7,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="9"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="6"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M18.7,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L1.7,30.0 L3.9,27.0 L5.9,24.0 L7.8,21.0 L9.6,18.0 L11.4,15.0 L13.0,12.0 L14.6,9.0 L16.0,6.0 L17.4,3.0 L18.7,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M70.0,0 L318,0 L318,34 L51.0,34.0 L53.0,31.2 L55.0,28.3 L56.9,25.5 L58.6,22.7 L60.3,19.8 L61.9,17.0 L63.4,14.2 L64.9,11.3 L66.3,8.5 L67.6,5.7 L68.8,2.8 L70.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="9"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="7"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M48.7,0 L318,0 L318,34 L11.8,34.0 L16.0,31.2 L19.9,28.3 L23.5,25.5 L27.0,22.7 L30.2,19.8 L33.3,17.0 L36.2,14.2 L39.0,11.3 L41.6,8.5 L44.1,5.7 L46.5,2.8 L48.7,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="9"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="8"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M7.0,0 L318,0 L318,34 L0.0,34.0 L0.0,31.2 L0.0,28.3 L0.0,25.5 L0.0,22.7 L0.0,19.8 L0.0,17.0 L0.0,14.2 L0.0,11.3 L0.0,8.5 L0.0,5.7 L2.1,2.8 L7.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="10"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="0"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L318,0 L318,34 L0.0,34.0 L0.0,31.2 L0.0,28.3 L0.0,25.5 L0.0,22.7 L0.0,19.8 L0.0,17.0 L0.0,14.2 L0.0,11.3 L0.0,8.5 L0.0,5.7 L0.0,2.8 L0.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="10"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="1"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L318,0 L318,34 L31.7,34.0 L28.5,31.2 L25.2,28.3 L21.6,25.5 L17.9,22.7 L13.8,19.8 L9.5,17.0 L4.8,14.2 L0.0,11.3 L0.0,8.5 L0.0,5.7 L0.0,2.8 L0.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="10"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="2"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L8.7,36.0 L6.9,33.0 L4.9,30.0 L2.8,27.0 L0.6,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M34.9,0 L318,0 L318,34 L61.1,34.0 L59.4,31.2 L57.7,28.3 L55.9,25.5 L54.0,22.7 L52.0,19.8 L49.9,17.0 L47.7,14.2 L45.4,11.3 L42.9,8.5 L40.4,5.7 L37.7,2.8 L34.9,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="10"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="3"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M10.5,0 L268,0 L268,36 L25.5,36.0 L24.7,33.0 L23.8,30.0 L22.8,27.0 L21.7,24.0 L20.6,21.0 L19.4,18.0 L18.1,15.0 L16.7,12.0 L15.3,9.0 L13.8,6.0 L12.2,3.0 L10.5,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M62.7,0 L318,0 L318,34 L76.1,34.0 L75.3,31.2 L74.5,28.3 L73.6,25.5 L72.7,22.7 L71.6,19.8 L70.6,17.0 L69.4,14.2 L68.2,11.3 L67.0,8.5 L65.6,5.7 L64.2,2.8 L62.7,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="10"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="4"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M26.3,0 L268,0 L268,36 L31.0,36.0 L30.9,33.0 L30.8,30.0 L30.6,27.0 L30.4,24.0 L30.1,21.0 L29.8,18.0 L29.3,15.0 L28.9,12.0 L28.3,9.0 L27.7,6.0 L27.1,3.0 L26.3,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M76.8,0 L318,0 L318,34 L81.0,34.0 L80.9,31.2 L80.8,28.3 L80.7,25.5 L80.5,22.7 L80.2,19.8 L79.9,17.0 L79.5,14.2 L79.1,11.3 L78.6,8.5 L78.1,5.7 L77.5,2.8 L76.8,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="10"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="5"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M31.0,0 L268,0 L268,36 L26.3,36.0 L27.1,33.0 L27.7,30.0 L28.3,27.0 L28.9,24.0 L29.3,21.0 L29.8,18.0 L30.1,15.0 L30.4,12.0 L30.6,9.0 L30.8,6.0 L30.9,3.0 L31.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M81.0,0 L318,0 L318,34 L76.8,34.0 L77.5,31.2 L78.1,28.3 L78.6,25.5 L79.1,22.7 L79.5,19.8 L79.9,17.0 L80.2,14.2 L80.5,11.3 L80.7,8.5 L80.8,5.7 L80.9,2.8 L81.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="10"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="6"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M25.5,0 L268,0 L268,36 L10.5,36.0 L12.2,33.0 L13.8,30.0 L15.3,27.0 L16.7,24.0 L18.1,21.0 L19.4,18.0 L20.6,15.0 L21.7,12.0 L22.8,9.0 L23.8,6.0 L24.7,3.0 L25.5,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M76.1,0 L318,0 L318,34 L62.7,34.0 L64.2,31.2 L65.6,28.3 L67.0,25.5 L68.2,22.7 L69.4,19.8 L70.6,17.0 L71.6,14.2 L72.7,11.3 L73.6,8.5 L74.5,5.7 L75.3,2.8 L76.1,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="10"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="7"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M8.7,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.6,12.0 L2.8,9.0 L4.9,6.0 L6.9,3.0 L8.7,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M61.1,0 L318,0 L318,34 L34.9,34.0 L37.7,31.2 L40.4,28.3 L42.9,25.5 L45.4,22.7 L47.7,19.8 L49.9,17.0 L52.0,14.2 L54.0,11.3 L55.9,8.5 L57.7,5.7 L59.4,2.8 L61.1,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="10"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="8"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M31.7,0 L318,0 L318,34 L0.0,34.0 L0.0,31.2 L0.0,28.3 L0.0,25.5 L0.0,22.7 L4.8,19.8 L9.5,17.0 L13.8,14.2 L17.9,11.3 L21.6,8.5 L25.2,5.7 L28.5,2.8 L31.7,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="10"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="9"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L318,0 L318,34 L0.0,34.0 L0.0,31.2 L0.0,28.3 L0.0,25.5 L0.0,22.7 L0.0,19.8 L0.0,17.0 L0.0,14.2 L0.0,11.3 L0.0,8.5 L0.0,5.7 L0.0,2.8 L0.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="11"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="0"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L318,0 L318,34 L0.0,34.0 L0.0,31.2 L0.0,28.3 L0.0,25.5 L0.0,22.7 L0.0,19.8 L0.0,17.0 L0.0,14.2 L0.0,11.3 L0.0,8.5 L0.0,5.7 L0.0,2.8 L0.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="11"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="1"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L318,0 L318,34 L7.0,34.0 L2.1,31.2 L0.0,28.3 L0.0,25.5 L0.0,22.7 L0.0,19.8 L0.0,17.0 L0.0,14.2 L0.0,11.3 L0.0,8.5 L0.0,5.7 L0.0,2.8 L0.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="11"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="2"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M11.8,0 L318,0 L318,34 L48.7,34.0 L46.5,31.2 L44.1,28.3 L41.6,25.5 L39.0,22.7 L36.2,19.8 L33.3,17.0 L30.2,14.2 L27.0,11.3 L23.5,8.5 L19.9,5.7 L16.0,2.8 L11.8,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="11"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="3"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L18.7,36.0 L17.4,33.0 L16.0,30.0 L14.6,27.0 L13.0,24.0 L11.4,21.0 L9.6,18.0 L7.8,15.0 L5.9,12.0 L3.9,9.0 L1.7,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M51.0,0 L318,0 L318,34 L70.0,34.0 L68.8,31.2 L67.6,28.3 L66.3,25.5 L64.9,22.7 L63.4,19.8 L61.9,17.0 L60.3,14.2 L58.6,11.3 L56.9,8.5 L55.0,5.7 L53.0,2.8 L51.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="11"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="4"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M20.0,0 L268,0 L268,36 L29.6,36.0 L29.1,33.0 L28.6,30.0 L28.0,27.0 L27.4,24.0 L26.7,21.0 L25.9,18.0 L25.1,15.0 L24.2,12.0 L23.3,9.0 L22.2,6.0 L21.2,3.0 L20.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M71.2,0 L318,0 L318,34 L79.7,34.0 L79.3,31.2 L78.8,28.3 L78.3,25.5 L77.8,22.7 L77.1,19.8 L76.5,17.0 L75.7,14.2 L74.9,11.3 L74.1,8.5 L73.2,5.7 L72.2,2.8 L71.2,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="11"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="5"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M29.9,0 L268,0 L268,36 L29.9,36.0 L30.3,33.0 L30.5,30.0 L30.7,27.0 L30.9,24.0 L31.0,21.0 L31.0,18.0 L31.0,15.0 L30.9,12.0 L30.7,9.0 L30.5,6.0 L30.3,3.0 L29.9,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M80.1,0 L318,0 L318,34 L80.1,34.0 L80.3,31.2 L80.6,28.3 L80.8,25.5 L80.9,22.7 L81.0,19.8 L81.0,17.0 L81.0,14.2 L80.9,11.3 L80.8,8.5 L80.6,5.7 L80.3,2.8 L80.1,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="11"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="6"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M29.6,0 L268,0 L268,36 L20.0,36.0 L21.2,33.0 L22.2,30.0 L23.3,27.0 L24.2,24.0 L25.1,21.0 L25.9,18.0 L26.7,15.0 L27.4,12.0 L28.0,9.0 L28.6,6.0 L29.1,3.0 L29.6,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M79.7,0 L318,0 L318,34 L71.2,34.0 L72.2,31.2 L73.2,28.3 L74.1,25.5 L74.9,22.7 L75.7,19.8 L76.5,17.0 L77.1,14.2 L77.8,11.3 L78.3,8.5 L78.8,5.7 L79.3,2.8 L79.7,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="11"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="7"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M18.7,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L1.7,30.0 L3.9,27.0 L5.9,24.0 L7.8,21.0 L9.6,18.0 L11.4,15.0 L13.0,12.0 L14.6,9.0 L16.0,6.0 L17.4,3.0 L18.7,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M70.0,0 L318,0 L318,34 L51.0,34.0 L53.0,31.2 L55.0,28.3 L56.9,25.5 L58.6,22.7 L60.3,19.8 L61.9,17.0 L63.4,14.2 L64.9,11.3 L66.3,8.5 L67.6,5.7 L68.8,2.8 L70.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="11"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="8"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M48.7,0 L318,0 L318,34 L11.8,34.0 L16.0,31.2 L19.9,28.3 L23.5,25.5 L27.0,22.7 L30.2,19.8 L33.3,17.0 L36.2,14.2 L39.0,11.3 L41.6,8.5 L44.1,5.7 L46.5,2.8 L48.7,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="11"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="9"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M7.0,0 L318,0 L318,34 L0.0,34.0 L0.0,31.2 L0.0,28.3 L0.0,25.5 L0.0,22.7 L0.0,19.8 L0.0,17.0 L0.0,14.2 L0.0,11.3 L0.0,8.5 L0.0,5.7 L2.1,2.8 L7.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="11"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="10"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L318,0 L318,34 L0.0,34.0 L0.0,31.2 L0.0,28.3 L0.0,25.5 L0.0,22.7 L0.0,19.8 L0.0,17.0 L0.0,14.2 L0.0,11.3 L0.0,8.5 L0.0,5.7 L0.0,2.8 L0.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="12"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="0"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L318,0 L318,34 L0.0,34.0 L0.0,31.2 L0.0,28.3 L0.0,25.5 L0.0,22.7 L0.0,19.8 L0.0,17.0 L0.0,14.2 L0.0,11.3 L0.0,8.5 L0.0,5.7 L0.0,2.8 L0.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="12"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="1"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L318,0 L318,34 L0.0,34.0 L0.0,31.2 L0.0,28.3 L0.0,25.5 L0.0,22.7 L0.0,19.8 L0.0,17.0 L0.0,14.2 L0.0,11.3 L0.0,8.5 L0.0,5.7 L0.0,2.8 L0.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="12"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="2"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L318,0 L318,34 L31.7,34.0 L28.5,31.2 L25.2,28.3 L21.6,25.5 L17.9,22.7 L13.8,19.8 L9.5,17.0 L4.8,14.2 L0.0,11.3 L0.0,8.5 L0.0,5.7 L0.0,2.8 L0.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="12"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="3"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L8.7,36.0 L6.9,33.0 L4.9,30.0 L2.8,27.0 L0.6,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M34.9,0 L318,0 L318,34 L61.1,34.0 L59.4,31.2 L57.7,28.3 L55.9,25.5 L54.0,22.7 L52.0,19.8 L49.9,17.0 L47.7,14.2 L45.4,11.3 L42.9,8.5 L40.4,5.7 L37.7,2.8 L34.9,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="12"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="4"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M10.5,0 L268,0 L268,36 L25.5,36.0 L24.7,33.0 L23.8,30.0 L22.8,27.0 L21.7,24.0 L20.6,21.0 L19.4,18.0 L18.1,15.0 L16.7,12.0 L15.3,9.0 L13.8,6.0 L12.2,3.0 L10.5,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M62.7,0 L318,0 L318,34 L76.1,34.0 L75.3,31.2 L74.5,28.3 L73.6,25.5 L72.7,22.7 L71.6,19.8 L70.6,17.0 L69.4,14.2 L68.2,11.3 L67.0,8.5 L65.6,5.7 L64.2,2.8 L62.7,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="12"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="5"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M26.3,0 L268,0 L268,36 L31.0,36.0 L30.9,33.0 L30.8,30.0 L30.6,27.0 L30.4,24.0 L30.1,21.0 L29.8,18.0 L29.3,15.0 L28.9,12.0 L28.3,9.0 L27.7,6.0 L27.1,3.0 L26.3,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M76.8,0 L318,0 L318,34 L81.0,34.0 L80.9,31.2 L80.8,28.3 L80.7,25.5 L80.5,22.7 L80.2,19.8 L79.9,17.0 L79.5,14.2 L79.1,11.3 L78.6,8.5 L78.1,5.7 L77.5,2.8 L76.8,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="12"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="6"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M31.0,0 L268,0 L268,36 L26.3,36.0 L27.1,33.0 L27.7,30.0 L28.3,27.0 L28.9,24.0 L29.3,21.0 L29.8,18.0 L30.1,15.0 L30.4,12.0 L30.6,9.0 L30.8,6.0 L30.9,3.0 L31.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M81.0,0 L318,0 L318,34 L76.8,34.0 L77.5,31.2 L78.1,28.3 L78.6,25.5 L79.1,22.7 L79.5,19.8 L79.9,17.0 L80.2,14.2 L80.5,11.3 L80.7,8.5 L80.8,5.7 L80.9,2.8 L81.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="12"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="7"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M25.5,0 L268,0 L268,36 L10.5,36.0 L12.2,33.0 L13.8,30.0 L15.3,27.0 L16.7,24.0 L18.1,21.0 L19.4,18.0 L20.6,15.0 L21.7,12.0 L22.8,9.0 L23.8,6.0 L24.7,3.0 L25.5,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M76.1,0 L318,0 L318,34 L62.7,34.0 L64.2,31.2 L65.6,28.3 L67.0,25.5 L68.2,22.7 L69.4,19.8 L70.6,17.0 L71.6,14.2 L72.7,11.3 L73.6,8.5 L74.5,5.7 L75.3,2.8 L76.1,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="12"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="8"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M8.7,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.6,12.0 L2.8,9.0 L4.9,6.0 L6.9,3.0 L8.7,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M61.1,0 L318,0 L318,34 L34.9,34.0 L37.7,31.2 L40.4,28.3 L42.9,25.5 L45.4,22.7 L47.7,19.8 L49.9,17.0 L52.0,14.2 L54.0,11.3 L55.9,8.5 L57.7,5.7 L59.4,2.8 L61.1,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="12"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="9"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M31.7,0 L318,0 L318,34 L0.0,34.0 L0.0,31.2 L0.0,28.3 L0.0,25.5 L0.0,22.7 L4.8,19.8 L9.5,17.0 L13.8,14.2 L17.9,11.3 L21.6,8.5 L25.2,5.7 L28.5,2.8 L31.7,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="12"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="10"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L318,0 L318,34 L0.0,34.0 L0.0,31.2 L0.0,28.3 L0.0,25.5 L0.0,22.7 L0.0,19.8 L0.0,17.0 L0.0,14.2 L0.0,11.3 L0.0,8.5 L0.0,5.7 L0.0,2.8 L0.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="12"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="11"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L318,0 L318,34 L0.0,34.0 L0.0,31.2 L0.0,28.3 L0.0,25.5 L0.0,22.7 L0.0,19.8 L0.0,17.0 L0.0,14.2 L0.0,11.3 L0.0,8.5 L0.0,5.7 L0.0,2.8 L0.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="13"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="0"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L318,0 L318,34 L0.0,34.0 L0.0,31.2 L0.0,28.3 L0.0,25.5 L0.0,22.7 L0.0,19.8 L0.0,17.0 L0.0,14.2 L0.0,11.3 L0.0,8.5 L0.0,5.7 L0.0,2.8 L0.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="13"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="1"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L318,0 L318,34 L0.0,34.0 L0.0,31.2 L0.0,28.3 L0.0,25.5 L0.0,22.7 L0.0,19.8 L0.0,17.0 L0.0,14.2 L0.0,11.3 L0.0,8.5 L0.0,5.7 L0.0,2.8 L0.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="13"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="2"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L318,0 L318,34 L7.0,34.0 L2.1,31.2 L0.0,28.3 L0.0,25.5 L0.0,22.7 L0.0,19.8 L0.0,17.0 L0.0,14.2 L0.0,11.3 L0.0,8.5 L0.0,5.7 L0.0,2.8 L0.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="13"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="3"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M11.8,0 L318,0 L318,34 L48.7,34.0 L46.5,31.2 L44.1,28.3 L41.6,25.5 L39.0,22.7 L36.2,19.8 L33.3,17.0 L30.2,14.2 L27.0,11.3 L23.5,8.5 L19.9,5.7 L16.0,2.8 L11.8,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="13"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="4"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L18.7,36.0 L17.4,33.0 L16.0,30.0 L14.6,27.0 L13.0,24.0 L11.4,21.0 L9.6,18.0 L7.8,15.0 L5.9,12.0 L3.9,9.0 L1.7,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M51.0,0 L318,0 L318,34 L70.0,34.0 L68.8,31.2 L67.6,28.3 L66.3,25.5 L64.9,22.7 L63.4,19.8 L61.9,17.0 L60.3,14.2 L58.6,11.3 L56.9,8.5 L55.0,5.7 L53.0,2.8 L51.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="13"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="5"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M20.0,0 L268,0 L268,36 L29.6,36.0 L29.1,33.0 L28.6,30.0 L28.0,27.0 L27.4,24.0 L26.7,21.0 L25.9,18.0 L25.1,15.0 L24.2,12.0 L23.3,9.0 L22.2,6.0 L21.2,3.0 L20.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M71.2,0 L318,0 L318,34 L79.7,34.0 L79.3,31.2 L78.8,28.3 L78.3,25.5 L77.8,22.7 L77.1,19.8 L76.5,17.0 L75.7,14.2 L74.9,11.3 L74.1,8.5 L73.2,5.7 L72.2,2.8 L71.2,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="13"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="6"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M29.9,0 L268,0 L268,36 L29.9,36.0 L30.3,33.0 L30.5,30.0 L30.7,27.0 L30.9,24.0 L31.0,21.0 L31.0,18.0 L31.0,15.0 L30.9,12.0 L30.7,9.0 L30.5,6.0 L30.3,3.0 L29.9,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M80.1,0 L318,0 L318,34 L80.1,34.0 L80.3,31.2 L80.6,28.3 L80.8,25.5 L80.9,22.7 L81.0,19.8 L81.0,17.0 L81.0,14.2 L80.9,11.3 L80.8,8.5 L80.6,5.7 L80.3,2.8 L80.1,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="13"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="7"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M29.6,0 L268,0 L268,36 L20.0,36.0 L21.2,33.0 L22.2,30.0 L23.3,27.0 L24.2,24.0 L25.1,21.0 L25.9,18.0 L26.7,15.0 L27.4,12.0 L28.0,9.0 L28.6,6.0 L29.1,3.0 L29.6,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M79.7,0 L318,0 L318,34 L71.2,34.0 L72.2,31.2 L73.2,28.3 L74.1,25.5 L74.9,22.7 L75.7,19.8 L76.5,17.0 L77.1,14.2 L77.8,11.3 L78.3,8.5 L78.8,5.7 L79.3,2.8 L79.7,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="13"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="8"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M18.7,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L1.7,30.0 L3.9,27.0 L5.9,24.0 L7.8,21.0 L9.6,18.0 L11.4,15.0 L13.0,12.0 L14.6,9.0 L16.0,6.0 L17.4,3.0 L18.7,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M70.0,0 L318,0 L318,34 L51.0,34.0 L53.0,31.2 L55.0,28.3 L56.9,25.5 L58.6,22.7 L60.3,19.8 L61.9,17.0 L63.4,14.2 L64.9,11.3 L66.3,8.5 L67.6,5.7 L68.8,2.8 L70.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="13"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="9"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M48.7,0 L318,0 L318,34 L11.8,34.0 L16.0,31.2 L19.9,28.3 L23.5,25.5 L27.0,22.7 L30.2,19.8 L33.3,17.0 L36.2,14.2 L39.0,11.3 L41.6,8.5 L44.1,5.7 L46.5,2.8 L48.7,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="13"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="10"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M7.0,0 L318,0 L318,34 L0.0,34.0 L0.0,31.2 L0.0,28.3 L0.0,25.5 L0.0,22.7 L0.0,19.8 L0.0,17.0 L0.0,14.2 L0.0,11.3 L0.0,8.5 L0.0,5.7 L2.1,2.8 L7.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="13"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="11"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L318,0 L318,34 L0.0,34.0 L0.0,31.2 L0.0,28.3 L0.0,25.5 L0.0,22.7 L0.0,19.8 L0.0,17.0 L0.0,14.2 L0.0,11.3 L0.0,8.5 L0.0,5.7 L0.0,2.8 L0.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="13"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="12"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L318,0 L318,34 L0.0,34.0 L0.0,31.2 L0.0,28.3 L0.0,25.5 L0.0,22.7 L0.0,19.8 L0.0,17.0 L0.0,14.2 L0.0,11.3 L0.0,8.5 L0.0,5.7 L0.0,2.8 L0.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="14"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="0"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L318,0 L318,34 L0.0,34.0 L0.0,31.2 L0.0,28.3 L0.0,25.5 L0.0,22.7 L0.0,19.8 L0.0,17.0 L0.0,14.2 L0.0,11.3 L0.0,8.5 L0.0,5.7 L0.0,2.8 L0.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="14"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="1"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L318,0 L318,34 L0.0,34.0 L0.0,31.2 L0.0,28.3 L0.0,25.5 L0.0,22.7 L0.0,19.8 L0.0,17.0 L0.0,14.2 L0.0,11.3 L0.0,8.5 L0.0,5.7 L0.0,2.8 L0.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="14"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="2"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L318,0 L318,34 L0.0,34.0 L0.0,31.2 L0.0,28.3 L0.0,25.5 L0.0,22.7 L0.0,19.8 L0.0,17.0 L0.0,14.2 L0.0,11.3 L0.0,8.5 L0.0,5.7 L0.0,2.8 L0.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="14"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="3"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L318,0 L318,34 L31.7,34.0 L28.5,31.2 L25.2,28.3 L21.6,25.5 L17.9,22.7 L13.8,19.8 L9.5,17.0 L4.8,14.2 L0.0,11.3 L0.0,8.5 L0.0,5.7 L0.0,2.8 L0.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="14"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="4"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L8.7,36.0 L6.9,33.0 L4.9,30.0 L2.8,27.0 L0.6,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M34.9,0 L318,0 L318,34 L61.1,34.0 L59.4,31.2 L57.7,28.3 L55.9,25.5 L54.0,22.7 L52.0,19.8 L49.9,17.0 L47.7,14.2 L45.4,11.3 L42.9,8.5 L40.4,5.7 L37.7,2.8 L34.9,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="14"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="5"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M10.5,0 L268,0 L268,36 L25.5,36.0 L24.7,33.0 L23.8,30.0 L22.8,27.0 L21.7,24.0 L20.6,21.0 L19.4,18.0 L18.1,15.0 L16.7,12.0 L15.3,9.0 L13.8,6.0 L12.2,3.0 L10.5,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M62.7,0 L318,0 L318,34 L76.1,34.0 L75.3,31.2 L74.5,28.3 L73.6,25.5 L72.7,22.7 L71.6,19.8 L70.6,17.0 L69.4,14.2 L68.2,11.3 L67.0,8.5 L65.6,5.7 L64.2,2.8 L62.7,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="14"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="6"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M26.3,0 L268,0 L268,36 L31.0,36.0 L30.9,33.0 L30.8,30.0 L30.6,27.0 L30.4,24.0 L30.1,21.0 L29.8,18.0 L29.3,15.0 L28.9,12.0 L28.3,9.0 L27.7,6.0 L27.1,3.0 L26.3,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M76.8,0 L318,0 L318,34 L81.0,34.0 L80.9,31.2 L80.8,28.3 L80.7,25.5 L80.5,22.7 L80.2,19.8 L79.9,17.0 L79.5,14.2 L79.1,11.3 L78.6,8.5 L78.1,5.7 L77.5,2.8 L76.8,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="14"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="7"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M31.0,0 L268,0 L268,36 L26.3,36.0 L27.1,33.0 L27.7,30.0 L28.3,27.0 L28.9,24.0 L29.3,21.0 L29.8,18.0 L30.1,15.0 L30.4,12.0 L30.6,9.0 L30.8,6.0 L30.9,3.0 L31.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M81.0,0 L318,0 L318,34 L76.8,34.0 L77.5,31.2 L78.1,28.3 L78.6,25.5 L79.1,22.7 L79.5,19.8 L79.9,17.0 L80.2,14.2 L80.5,11.3 L80.7,8.5 L80.8,5.7 L80.9,2.8 L81.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="14"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="8"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M25.5,0 L268,0 L268,36 L10.5,36.0 L12.2,33.0 L13.8,30.0 L15.3,27.0 L16.7,24.0 L18.1,21.0 L19.4,18.0 L20.6,15.0 L21.7,12.0 L22.8,9.0 L23.8,6.0 L24.7,3.0 L25.5,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M76.1,0 L318,0 L318,34 L62.7,34.0 L64.2,31.2 L65.6,28.3 L67.0,25.5 L68.2,22.7 L69.4,19.8 L70.6,17.0 L71.6,14.2 L72.7,11.3 L73.6,8.5 L74.5,5.7 L75.3,2.8 L76.1,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="14"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="9"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M8.7,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.6,12.0 L2.8,9.0 L4.9,6.0 L6.9,3.0 L8.7,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M61.1,0 L318,0 L318,34 L34.9,34.0 L37.7,31.2 L40.4,28.3 L42.9,25.5 L45.4,22.7 L47.7,19.8 L49.9,17.0 L52.0,14.2 L54.0,11.3 L55.9,8.5 L57.7,5.7 L59.4,2.8 L61.1,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="14"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="10"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M31.7,0 L318,0 L318,34 L0.0,34.0 L0.0,31.2 L0.0,28.3 L0.0,25.5 L0.0,22.7 L4.8,19.8 L9.5,17.0 L13.8,14.2 L17.9,11.3 L21.6,8.5 L25.2,5.7 L28.5,2.8 L31.7,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="14"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="11"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L318,0 L318,34 L0.0,34.0 L0.0,31.2 L0.0,28.3 L0.0,25.5 L0.0,22.7 L0.0,19.8 L0.0,17.0 L0.0,14.2 L0.0,11.3 L0.0,8.5 L0.0,5.7 L0.0,2.8 L0.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="14"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="12"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L318,0 L318,34 L0.0,34.0 L0.0,31.2 L0.0,28.3 L0.0,25.5 L0.0,22.7 L0.0,19.8 L0.0,17.0 L0.0,14.2 L0.0,11.3 L0.0,8.5 L0.0,5.7 L0.0,2.8 L0.0,0.0 Z"/>
                     </MultiDataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="14"/>
                             <Condition Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="13"/>
                         </MultiDataTrigger.Conditions>
-                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L268,0 L268,36 L0.0,36.0 L0.0,33.0 L0.0,30.0 L0.0,27.0 L0.0,24.0 L0.0,21.0 L0.0,18.0 L0.0,15.0 L0.0,12.0 L0.0,9.0 L0.0,6.0 L0.0,3.0 L0.0,0.0 Z"/>
+                        <Setter TargetName="Back" Property="Data" Value="M0.0,0 L318,0 L318,34 L0.0,34.0 L0.0,31.2 L0.0,28.3 L0.0,25.5 L0.0,22.7 L0.0,19.8 L0.0,17.0 L0.0,14.2 L0.0,11.3 L0.0,8.5 L0.0,5.7 L0.0,2.8 L0.0,0.0 Z"/>
                     </MultiDataTrigger>
                 </DataTemplate.Triggers>
             </DataTemplate>
@@ -1276,8 +1276,8 @@
         </Grid>
 
         <Canvas x:Name="HUDAnnaControl_ANNAOptions" Style="{StaticResource A_Style_FrameworkElement_HideIfMapOnly}" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="0" Height="0" Margin="146,0,0,135">
-            <Grid Canvas.Left="122" Canvas.Top="-500" Height="1000">
-                <StackPanel x:Name="ANNAMain" Orientation="Vertical" VerticalAlignment="Center" Width="307">
+            <Grid Canvas.Left="72" Canvas.Top="-505" Height="1000">
+                <StackPanel x:Name="ANNAMain" Orientation="Vertical" VerticalAlignment="Center" Width="355">
                     <local:CommonListBox AlternationCount="14" ItemsSource="{Binding OptionsList}" ItemTemplate="{StaticResource A_DataTemplate_SpeechItem}" Background="{x:Null}" BorderBrush="{x:Null}" BorderThickness="0" Margin="0,0,0,0" Style="{x:Null}" VerticalAlignment="Center">
                         <local:CommonListBox.Template>
                             <ControlTemplate TargetType="{x:Type local:CommonListBox}">
