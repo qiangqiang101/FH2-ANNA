@@ -11,8 +11,32 @@ FH2 ANNA is a mod for the [FH2 Mod Platform](https://github.com/Trinculo54/fh2-m
 - **Enable Auto Drive**: the car drives itself along your GPS route. Greyed out until a route is set. A few seconds in, the camera switches to slow cinematic shots and the HUD hides; touch the gas, brake or steering to take over. Works online too.
 - **Lights**: headlights, hazard lights, left and right indicators. Headlights shine in daylight too, and pop-up headlights open and close with them.
 - **Doors**: open or close all, the roof, hood, trunk, each door, storage compartments, pop-up headlights and active spoilers, whatever the car can move. The Lights and Doors lists stay open so you can flip things back and forth.
+- **Tune Car**: opens the game's tuning screen, as the pause menu's Tune Car tile does (backing out of it leaves you on the pause menu).
 
 **Set Route To Nearest**: Race, Bucket List, Festival, Barn Find or Bonus Board.
+
+**Start Matchmaking for**: Online Road Trip, Online Freeroam, Private Online Road Trip or Private Online Freeroam, started straight from the road without opening the pause menu. Can be hidden on the Mods page.
+
+## Voice commands
+
+Talk to ANNA like on the Xbox with Kinect. Turn on **Voice commands** on the Mods page, then while driving:
+
+| Say | ANNA |
+|---|---|
+| "ANNA" | Wakes up and listens: the ring round the minimap lights up |
+| "Set Route To Nearest" | Opens that list |
+| "Race" | Chooses it, shows it chosen, and does it |
+| "ANNA, Enable Auto Drive" | Does it straight away |
+| "ANNA, set GPS to the nearest Bonus Boards" | Also fine: list names, plurals and the usual ways of asking work |
+| "Back" / "Close" | Goes back a list / puts ANNA to sleep |
+
+You can say anything the menu shows right now, as it reads now ("Close Hood" once the hood's open), and other mods' entries too. Once ANNA's awake, from "ANNA" or from D-pad down, you don't need to say "ANNA" again; it goes back to sleep after 10 seconds of quiet.
+
+Voice commands use Windows' own speech recognition, offline, and your default microphone. A headset works much better than speakers. Windows only has speech recognition for some languages (English, French, German, Spanish, Japanese and Chinese); without one for the game's language, ANNA listens in English if Windows has that. If nothing happens, check **Windows Settings > Privacy & security > Microphone > Let desktop apps access your microphone**.
+
+## Languages
+
+ANNA speaks the game's language: English, French, German, Italian, Spanish (Spain and Mexico), Brazilian Portuguese, Dutch, Polish, Russian, Japanese, Korean and Traditional Chinese, following the game's text language (or the one Extra Options sets). Names of places and modes are the game's own. Czech and Hungarian stay in English, as the game does. The Mods page rows follow from the next launch after a language change.
 
 ## Controls
 
@@ -49,6 +73,8 @@ On **Pause > Settings > MODS**:
 | Autodrive cinematic camera | On | The cinematic shots and hidden HUD during Auto Drive |
 | Hide hood and trunk in ANNA | Off | Leaves the hood and trunk out of Doors, and Open All leaves them shut: for cars with an invisible trunk or a fake engine |
 | Close doors when moving | On | The doors, hood, trunk and storage ANNA opened shut by themselves once the car drives off (the roof stays as it is) |
+| Start Matchmaking in ANNA | On | Shows the Start Matchmaking for list |
+| Voice commands | Off | Listens to the microphone for "ANNA" and a command (see Voice commands) |
 
 They're saved in `fh2-mods\FH2ANNA.ini`.
 
@@ -63,6 +89,7 @@ They're saved in `fh2-mods\FH2ANNA.ini`.
 
   Otherwise opening ANNA also starts Extra Options' autodrive, and moving up ANNA's list switches the hazard lights. Extra Options' headlight key still works alongside ANNA's; whichever you used last wins.
 - **FH2 Mouse & Keyboard**: gives ANNA its keyboard keys and key pictures (see Controls).
+- **Mods page text in other languages**: the platform's Mods page shows mods' rows in Chinese, Japanese, Russian, accented letters and so on correctly while FH2 ANNA is installed.
 
 ## For mod developers: adding to ANNA's menu
 
@@ -85,7 +112,7 @@ if (anna) {
 }
 ```
 
-ANNA's own lists are `car`, `car.lights`, `car.doors` and `route`. An entry without `on_choose` is a list of its own. Entries can hide themselves (`shown`), change their label each time their list opens (`label_now`), keep ANNA open after they're chosen (`stays_open`), and show greyed out (`enabled`). `on_choose` runs on the game's thread. The header has the details.
+ANNA's own lists are `car`, `car.lights`, `car.doors`, `route` and `online`. An entry without `on_choose` is a list of its own. Entries can hide themselves (`shown`), change their label each time their list opens (`label_now`), keep ANNA open after they're chosen (`stays_open`), and show greyed out (`enabled`). `on_choose` runs on the game's thread. Your entries can be said as voice commands too, by their label. The header has the details.
 
 ## Building
 
