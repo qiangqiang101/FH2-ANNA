@@ -1,0 +1,11 @@
+// FH3's ANNA control, ported to FH2 (tools/port_anna_xaml.py), and its textures, converted to
+// FH2's .swatchbin (tools/fh3_textures.py). src/anna_xaml.cpp and src/textures.cpp use them.
+ANNA_XAML RCDATA "../assets/HUDAnnaControl.xaml"
+TEX_ANNA_Glow_On RCDATA "../assets/ANNA_Glow_On.swatchbin"
+TEX_ANNA_Glow_ANNAOnly RCDATA "../assets/ANNA_Glow_ANNAOnly.swatchbin"
+TEX_ANNA_Logo RCDATA "../assets/ANNA_Logo.swatchbin"
+TEX_VerticalGradient RCDATA "../assets/VerticalGradient.swatchbin"
+TEX_Minimap_OpacityMask RCDATA "../assets/Minimap_OpacityMask.swatchbin"
+TEX_Minimap_OpacityMask_WithDestination RCDATA "../assets/Minimap_OpacityMask_WithDestination.swatchbin"
+TEX_Minimap_OpacityMask_MapOnly RCDATA "../assets/Minimap_OpacityMask_MapOnly.swatchbin"
+TEX_Minimap_OpacityMask_MapOnly_WithDestination RCDATA "../assets/Minimap_OpacityMask_MapOnly_WithDestination.swatchbin"

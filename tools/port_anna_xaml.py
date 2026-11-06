@@ -1,0 +1,267 @@
+"""Ports FH3's ANNA control (media/UI.zip Controls/HUDAnnaControl.xaml) to FH2, into
+assets/HUDAnnaControl.xaml, which FH2 ANNA loads instead of FH2's own (src/anna_xaml.cpp).
+
+    python tools/port_anna_xaml.py "D:\\Games\\FH2\\Opus_1.0.125.0_x64__8wekyb3d8bbwe"
+
+FH3's layout is kept as it is: the 300 px round minimap with its opacity-mask textures, the
+inactive edge (two ed:Arcs, with a gap for the label), the edge glow (a TextureMaskEffect over
+FH3's glow texture, faded by a gradient), the label, and the list, masked by a circle so it
+starts at the minimap's edge. Only what FH2 doesn't have is changed:
+  - FH3's textures come from FH2 ANNA's own folder (converted by tools/fh3_textures.py);
+  - FH3's "A_FZMaterialPresetAdditive" is a plain preset there (FH2's of that name is additive),
+    and its HUD item glass is FH2's A_FZMaterialPresetGlass_Standard; its HUD text is 26 pt;
+  - the controller-button controls (FH3's ANNA input commands) are FH2's d-pad pictures, and the
+    label is the d-pad and FH3's ANNA logo (no Kinect: no microphone, never "unavailable"); the
+    label's and the highlighted row's d-pad pictures are resources of their own, FH2ANNA_Icon_Open
+    and FH2ANNA_Icon_Choose, for a keyboard mod (FH2Mouse) to show its keys in;
+  - FH3's IsHighlighted is FH2's IsSelected (FH2 ANNA highlights with it); ElementToTrack isn't
+    FH2's; the minimap keeps FH2's "hud" map profile; the sounds are FH2's;
+  - FH2's HUD puts the control at 54, 92 from the bottom left: moved so the minimap's edges are on
+    the HUD's safe area, about 110 from the left, the ring's centre level with the speedometer's
+    (measured in the game: 24 higher than the speedometer's 300 x 23 layout says);
+  - the list's circular mask is on a Grid, not an FZMaterial, and the Decorators are Grids
+    (FH2's FZMaterial and Decorator scale their content to fit).
+"""
+import os
+import re
+import sys
+import zipfile
+
+TEXTURES = ['ANNA_Glow_On', 'ANNA_Glow_ANNAOnly', 'ANNA_Logo', 'VerticalGradient', 'Minimap_OpacityMask',
+            'Minimap_OpacityMask_WithDestination', 'Minimap_OpacityMask_MapOnly',
+            'Minimap_OpacityMask_MapOnly_WithDestination']
+
+RESOURCES = '''
+            <!-- FH2 ANNA: what FH3's control uses that FH2 hasn't, or has under other names -->
+            <local:FZMaterialPreset x:Key="FH2ANNA_Preset_Plain" />
+            <!-- ANNA's buttons, its own pictures (of the pad's): a keyboard mod (FH2Mouse) finds them
+                 here by name and shows its keys in them -->
+            <ImageSource x:Key="FH2ANNA_Icon_Open">/ForzaUI;component/Textures/Data_Bound/ControllerIcons/Controller_DPadDown.png</ImageSource>
+            <ImageSource x:Key="FH2ANNA_Icon_Choose">/ForzaUI;component/Textures/Data_Bound/ControllerIcons/Controller_DPadRight.png</ImageSource>
+            <Style x:Key="FH2ANNA_Text" TargetType="{x:Type local:FZTextBlock}" BasedOn="{StaticResource A_Style_FZTextBlock_HudMedium}">
+                <Setter Property="FontSize" Value="26" />
+            </Style>
+            <Style x:Key="FH2ANNA_GlassHudItem" TargetType="local:FZMaterial">
+                <Setter Property="Color" Value="{StaticResource A_Color_HUD_ItemBackground}" />
+                <Setter Property="Preset" Value="{DynamicResource A_FZMaterialPresetGlass_Standard}" />
+                <Setter Property="Height" Value="36" />
+            </Style>
+'''
+
+DPAD_SELECT = ('<local:FZMaterial ImageSource="{StaticResource A_BitmapImage_ControllerButton_DPadRight}" '
+               'Width="28" Height="28" Color="White" />')
+
+LABEL = '''<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <local:FZMaterial x:Name="ANNAMic" Width="0" Height="0" Visibility="Collapsed" />
+                        <local:FZMaterial ImageSource="{StaticResource FH2ANNA_Icon_Open}" Width="25" Height="25" Margin="0,0,6,0" Color="White" VerticalAlignment="Center" />
+                        <local:FZMaterial ImageSource="/ForzaUI;component/Textures/Data_Bound/FH2ANNA/ANNA_Logo.png" Width="59" Height="18" VerticalAlignment="Center" />
+                    </StackPanel>'''
+
+
+def sub(text, old, new, count=1):
+    found = text.count(old)
+    if found != count:
+        raise ValueError(f'expected {count} of {old[:70]!r}, found {found}')
+    return text.replace(old, new)
+
+# ---- the list's rows ---------------------------------------------------------------------------
+# FH3 cuts the rows' left ends round the minimap with an opacity mask; on FH2's HUD (drawn tilted)
+# a masked element is drawn stretched across the screen, and clips aren't kept. So each row's
+# background is a Path, its left end the ring's arc where the row is beside the ring: the row's
+# place comes from its index (the list's AlternationIndex) and the list's length (OptionsList's
+# Count: FH2's ItemsControl has no Items),
+# the list being centred on the ring's centre. Coordinates from the ring's centre.
+RING_R    = 153        # the cut: the ring's outer edge (143) and FH3's 10 between
+LIST_LEFT = 122        # the rows start here, under the ring (the cut makes their left ends), the
+                       # text (right-aligned in 214) then starting 15 clear of the cut
+ROW_W     = 268        # a row's background (FH3's), then 3 and the d-pad's 36
+ROW_H     = 36
+PITCH     = 39         # a row and its 1.5 + 1.5 margins
+MAX_ROWS  = 14
+SHOWN     = 6          # FH2 ANNA's window (src/fh2anna.cpp kRows): when it scrolls, the list is
+                       # these and a "more" row above and below, those MORE_H high
+MORE_H    = 22
+ARROW     = '/ForzaUI;component/Textures/Anthem/SocialFeedIcons/Scroll_Arrow.png'   # the pause menu's (pointing down)
+BACK      = '#B0383838'   # FH3's rows: grey, see-through
+THEME     = '#FFF4F444'   # FH2's HUD yellow (its gear box's; FnFNitro's Original theme), for FH3's cyan:
+                          # the highlighted row, the d-pad's square, the minimap's glowing edge
+ON_THEME  = '#FF1A1A1A'   # text on it, and the square the d-pad's picture is on
+
+
+def left_edge(y):
+    """Where a row's background starts at height y (from the ring's centre), from its own left."""
+    if abs(y) >= RING_R:
+        return 0.0
+    return max(0.0, (RING_R * RING_R - y * y) ** 0.5 - LIST_LEFT)
+
+
+def heights(count):
+    if count == SHOWN + 2:
+        return [MORE_H] + [ROW_H] * SHOWN + [MORE_H]
+    return [ROW_H] * count
+
+
+def row_shape(count, index):
+    h = heights(count)
+    top = -sum(x + 3 for x in h) / 2 + sum(x + 3 for x in h[:index]) + 1.5
+    height = h[index]
+    steps = 12
+    pts = [(left_edge(top + height * k / steps), height * k / steps) for k in range(steps + 1)]
+    d = 'M%.1f,0 L%d,0 L%d,%d' % (pts[0][0], ROW_W, ROW_W, height)
+    for x, y in reversed(pts):
+        d += ' L%.1f,%.1f' % (x, y)
+    return d + ' Z'
+
+
+def more(text, arrow):
+    """A row FH2 ANNA adds above or below the entries: there are more that way (arrow: the arrow
+    to show), or, at an end with no more, nothing (arrow None)."""
+    t = ('                    <DataTrigger Binding="{Binding Command}" Value="' + text + '">\n'
+         '                        <Setter TargetName="Row" Property="Height" Value="' + str(MORE_H) + '" />\n'
+         '                        <Setter TargetName="Back" Property="Fill" Value="#60383838" />\n'
+         '                        <Setter TargetName="Label" Property="Visibility" Value="Collapsed" />\n')
+    if arrow:
+        t += '                        <Setter TargetName="' + arrow + '" Property="Visibility" Value="Visible" />\n'
+    else:
+        t += '                        <Setter TargetName="Back" Property="Visibility" Value="Hidden" />\n'
+    return t + '                    </DataTrigger>\n'
+
+
+def arrow(name, up):
+    """The pause menu's scroll arrow (its texture points down; the pause menu turns it for up)."""
+    turn = (' RenderTransformOrigin="0.5,0.5">\n'
+            '                        <local:FZMaterial.RenderTransform><RotateTransform Angle="180"/></local:FZMaterial.RenderTransform>\n'
+            '                    </local:FZMaterial>\n') if up else ' />\n'
+    return ('                    <local:FZMaterial x:Name="' + name + '" Visibility="Collapsed" ImageSource="' + ARROW + '" '
+            'Width="34" Height="16" HorizontalAlignment="Left" VerticalAlignment="Center" '
+            'Margin="' + str(ROW_W // 2 - 17) + ',0,0,0"' + turn)
+
+
+def row_template():
+    index = '{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}'
+    count = '{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}'
+    triggers = ''
+    for n in range(1, MAX_ROWS + 1):
+        for i in range(n):
+            triggers += ('                    <MultiDataTrigger>\n'
+                         '                        <MultiDataTrigger.Conditions>\n'
+                         '                            <Condition Binding="' + count + '" Value="' + str(n) + '"/>\n'
+                         '                            <Condition Binding="' + index + '" Value="' + str(i) + '"/>\n'
+                         '                        </MultiDataTrigger.Conditions>\n'
+                         '                        <Setter TargetName="Back" Property="Data" Value="' + row_shape(n, i) + '"/>\n'
+                         '                    </MultiDataTrigger>\n')
+    return ('<DataTemplate x:Key="A_DataTemplate_SpeechItem">\n'
+            '                <Grid x:Name="Row" Width="' + str(ROW_W + 39) + '" Height="' + str(ROW_H) + '" Margin="0,1.5,0,1.5">\n'
+            '                    <Path x:Name="Back" HorizontalAlignment="Left" VerticalAlignment="Top" Fill="' + BACK + '" '
+            'Data="M0,0 L' + str(ROW_W) + ',0 L' + str(ROW_W) + ',' + str(ROW_H) + ' L0,' + str(ROW_H) + ' Z"/>\n'
+            '                    <local:FZTextBlock x:Name="Label" Text="{Binding Command}" Style="{StaticResource FH2ANNA_Text}" Margin="0,0,47,0" '
+            'Width="{StaticResource A_Double_SpeechOptionWidth}" VerticalAlignment="Center" HorizontalAlignment="Right" />\n'
+            # "there's more that way" rows (FH2 ANNA gives them these texts): the pause menu's arrow,
+            # on a shorter, fainter row
+            + arrow('MoreUp', True) + arrow('MoreDown', False) +
+            # the button that chooses, on a dark square (FH2's d-pad is white: on the yellow it'd vanish)
+            '                    <local:FZMaterial x:Name="Dpad" HorizontalAlignment="Right" Width="36" Height="36" '
+            'Color="' + ON_THEME + '" Visibility="Hidden">\n'
+            '                        <local:FZMaterial ImageSource="{StaticResource FH2ANNA_Icon_Choose}" '
+            'Width="28" Height="28" Color="White" />\n'
+            '                    </local:FZMaterial>\n'
+            '                </Grid>\n'
+            '                <DataTemplate.Triggers>\n'
+            '                    <DataTrigger Binding="{Binding IsSelected}" Value="True">\n'
+            '                        <Setter TargetName="Back" Property="Fill" Value="' + THEME + '" />\n'
+            '                        <Setter TargetName="Label" Property="Color" Value="' + ON_THEME + '" />\n'
+            '                        <Setter TargetName="Dpad" Property="Visibility" Value="Visible" />\n'
+            '                    </DataTrigger>\n'
+            # disabled entries ("FH2ANNA_OFF:" and their label): FH2 ANNA puts their triggers here as
+            # it loads this (src/fh2anna.cpp, disabled_triggers), after the highlight's, so they win
+            '                    <!--FH2ANNA_OFF-->\n' + more('FH2ANNA_MORE_UP', 'MoreUp') +
+            more('FH2ANNA_MORE_DOWN', 'MoreDown') + more('FH2ANNA_MORE_NONE', None) + triggers +
+            '                </DataTemplate.Triggers>\n'
+            '            </DataTemplate>')
+
+
+def port(t):
+    for name in TEXTURES:
+        t = t.replace(f'/ForzaUI;component/Textures/Anthem/HUD/{name}.png',
+                      f'/ForzaUI;component/Textures/Data_Bound/FH2ANNA/{name}.png')
+    t = sub(t, '        <ResourceDictionary>\n', '        <ResourceDictionary>\n' + RESOURCES)
+    # FH3's cyan is FH2's yellow
+    t = sub(t, '<Color x:Key="A_Color_Minimap_EdgeActive">#FF00d2ff</Color>', '<Color x:Key="A_Color_Minimap_EdgeActive">' + THEME + '</Color>')
+    t = sub(t, '<Color x:Key="A_Color_ItemSelected">#FF00c6ff</Color>', '<Color x:Key="A_Color_ItemSelected">' + THEME + '</Color>')
+    t = sub(t, '<Color x:Key="A_Color_ItemHighlighted">#FF00c6ff</Color>', '<Color x:Key="A_Color_ItemHighlighted">' + THEME + '</Color>')
+    t = t.replace('{StaticResource A_FZMaterialPresetAdditive}', '{StaticResource FH2ANNA_Preset_Plain}')
+    t = t.replace('{StaticResource A_Style_FZTextBlock_HudMedium_Tight}', '{StaticResource FH2ANNA_Text}')
+    t = t.replace('{StaticResource A_Style_FZTextBlock_HudMedium}', '{StaticResource FH2ANNA_Text}')
+    t = sub(t, 'BasedOn="{StaticResource FH2ANNA_Text}">\n                <Setter Property="FontSize" Value="26" />',
+            'BasedOn="{StaticResource A_Style_FZTextBlock_HudMedium}">\n                <Setter Property="FontSize" Value="26" />')
+    t = t.replace('{StaticResource A_Style_FZMaterial_GlassHudItem}', '{StaticResource FH2ANNA_GlassHudItem}')
+    t = t.replace('{StaticResource A_Double_HUDMiniLeaderboard_RowHeight}', '36')
+    # the list items: FH2's d-pad picture, FH2's highlight
+    t = re.sub(r'<local:ControllerButtonControl CommandOverride="INPUTCMD_ANNA_SELECT"[^>]*/>', DPAD_SELECT, t)
+    t = sub(t, 'Binding="{Binding IsHighlighted}"', 'Binding="{Binding IsSelected}"')
+    # the label
+    start = t.index('<Grid HorizontalAlignment="Center" Margin="-3,0,0,0">')
+    end = t.index('</Grid>', t.index('A_Style_FrameworkElement_ANNAUnavailable', start)) + len('</Grid>')
+    t = t[:start] + LABEL + t[end:]
+    # the minimap
+    t = sub(t, '<local:MapCustomRenderElement Alpha="1.0" MapId="default" x:Name="mapCustomRenderElement">',
+            '<local:MapCustomRenderElement Alpha="1.0" MapId="default" MapProfile="hud" x:Name="mapCustomRenderElement">')
+    t = re.sub(r'\s*ElementToTrack="\{Binding ElementToTrack[^"]*\}"', '', t)
+    # the list's circular mask on a Grid: FH2's FZMaterial scales its content to fill itself
+    t = sub(t, '<Style x:Key="A_Style_FZMaterial_ANNAOptions_Mask" TargetType="{x:Type local:FZMaterial}">',
+            '<Style x:Key="A_Style_FZMaterial_ANNAOptions_Mask" TargetType="{x:Type Grid}">')
+    t = sub(t, '<Setter Property="Margin" Value="31,0,0,45"/>\n                <Setter Property="Color" Value="Transparent"/>',
+            '<Setter Property="Margin" Value="31,0,0,45"/>')
+    opening = '<local:FZMaterial Style="{StaticResource A_Style_FZMaterial_ANNAOptions_Mask}">'
+    start = t.index(opening)
+    t = t[:start] + '<Grid Style="{StaticResource A_Style_FZMaterial_ANNAOptions_Mask}">' + t[start + len(opening):]
+    end = t.index('</local:FZMaterial>', t.index('x:Name="ANNAMain"'))
+    t = t[:end] + '</Grid>' + t[end + len('</local:FZMaterial>'):]
+    # FH2's Decorator scales its child to fill it: plain Grids instead
+    t = t.replace('<Decorator ', '<Grid ').replace('<Decorator>', '<Grid>').replace('</Decorator>', '</Grid>')
+    # The list: FH3 sizes it with styles that switch on the display mode (a 430-wide box, masked
+    # round the minimap), which FH2 doesn't apply, so it fills the whole HUD. Instead, FH3's list
+    # as it is, in a Canvas at the ring's centre (the arcs are 6, 10, 6, 4 inside the 300 minimap,
+    # itself -4 left and -12 below: the centre is 146 from the left, 135 from the bottom, the
+    # radius 142), starting 12 inside the ring's right edge, its middle on the centre; FH3's rows
+    # are 268 wide (the text right-aligned in them) and the d-pad's square 39 more.
+    start = t.index('<Grid x:Name="HUDAnnaControl_ANNAOptions"')
+    end = t.index('<Grid x:Name="HUDAnnaControl_EdgeGlow"')
+    block = t[start:end]
+    a = block.index('<local:CommonListBox')
+    b = block.index('</local:CommonListBox>') + len('</local:CommonListBox>')
+    listbox = block[a:b]
+    t = t[:start] + ('<Canvas x:Name="HUDAnnaControl_ANNAOptions" Style="{StaticResource A_Style_FrameworkElement_HideIfMapOnly}" '
+                     'HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="0" Height="0" Margin="146,0,0,135">\n'
+                     '            <Grid Canvas.Left="' + str(LIST_LEFT) + '" Canvas.Top="-500" Height="1000">\n'
+                     '                <StackPanel x:Name="ANNAMain" Orientation="Vertical" VerticalAlignment="Center" Width="' + str(ROW_W + 39) + '">\n'
+                     '                    ' + listbox.replace('<local:CommonListBox ', '<local:CommonListBox AlternationCount="' + str(MAX_ROWS) + '" ', 1) + '\n'
+                     '                </StackPanel>\n'
+                     '            </Grid>\n'
+                     '        </Canvas>\n\n        ') + t[end:]
+    # The rows: FH3's look, each row's background a shape whose left end is the ring's arc.
+    a = t.index('<DataTemplate x:Key="A_DataTemplate_SpeechItem">')
+    b = t.index('</DataTemplate>', a) + len('</DataTemplate>')
+    t = t[:a] + row_template() + t[b:]
+    # sounds
+    t = t.replace('HZ3_SFX_HUD_ANNA_Select_01', 'HZ2_SFX_HUD_ANNA_Wake_01').replace('HZ3_SFX_HUD_ANNA_', 'HZ2_SFX_HUD_ANNA_')
+    # where FH3's HUD puts it
+    t = sub(t, '<Grid x:Name="LayoutRoot" Style="{StaticResource A_Style_FrameworkElement_HideIfOff}">',
+            '<Grid x:Name="LayoutRoot" Style="{StaticResource A_Style_FrameworkElement_HideIfOff}" Margin="59,0,0,-30">')
+    return t
+
+
+def main():
+    fh3 = sys.argv[1] if len(sys.argv) > 1 else r'D:\Games\FH2\Opus_1.0.125.0_x64__8wekyb3d8bbwe'
+    text = zipfile.ZipFile(os.path.join(fh3, 'Mount', 'media', 'UI.zip')).read('Controls/HUDAnnaControl.xaml').decode('utf-8-sig')
+    text = text.replace('\r\n', '\n')
+    out = port(text).replace('\n', '\r\n')
+    here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    path = os.path.join(here, 'assets', 'HUDAnnaControl.xaml')
+    with open(path, 'w', encoding='utf-8', newline='') as f:
+        f.write(out)
+    print(path, len(out))
+
+
+if __name__ == '__main__':
+    main()

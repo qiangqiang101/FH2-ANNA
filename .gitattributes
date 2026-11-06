@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# FH3 textures: never touch their bytes
+*.swatchbin binary
