@@ -219,6 +219,12 @@
                         <Setter TargetName="Label" Property="Visibility" Value="Collapsed" />
                         <Setter TargetName="Back" Property="Visibility" Value="Hidden" />
                     </DataTrigger>
+                    <DataTrigger Binding="{Binding Command}" Value="FH2ANNA_LISTENING">
+                        <Setter TargetName="Row" Property="Height" Value="0" />
+                        <Setter TargetName="Back" Property="Visibility" Value="Hidden" />
+                        <Setter TargetName="Label" Property="Visibility" Value="Collapsed" />
+                        <Setter TargetName="Dpad" Property="Visibility" Value="Hidden" />
+                    </DataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="1"/>

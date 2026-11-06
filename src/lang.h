@@ -13,5 +13,7 @@ void lang_init(const std::wstring& ini);
 // `english` in the game's language now; itself when there's no translation (another mod's label).
 const char* tr(const char* english);
 std::wstring wide(const char* utf8);
+// The language tr() translates into: "EN" (English: EN, GB, CZ, HU...), "DE", "CHT"...
+const char* lang_code();
 
 } // namespace fh2anna

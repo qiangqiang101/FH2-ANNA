@@ -144,6 +144,22 @@ const Text kTexts[] = {
   "Lista „Szukaj gry” w ANNA: wycieczka online, jazda dowolna online i ich prywatne sesje, uruchamiane bez menu pauzy.",
   "Список ANNA \"Начать поиск игры\": \"Большие гонки\" в сети, свободный заезд в сети и их частные сессии, без меню паузы.",
   "ANNA's lijst \"Matchmaking starten voor\": online roadtrip, online vrij rondrijden en hun privésessies, gestart zonder het pauzemenu."}},
+{"Voice commands", {"Comandos de voz", "Sprachbefehle", "Commandes vocales", "Comandos de voz", "Comandos de voz", "Comandi vocali", "音声コマンド", "음성 명령", "語音指令", "Hlasové příkazy", "Hangutasítások", "Polecenia głosowe", "Голосовые команды", "Spraakopdrachten"}},
+{"Say \"ANNA\" and a command from ANNA's menu as it reads now (\"ANNA, Enable Auto Drive\"), and it's done. Uses Windows' speech recognition and the default microphone; a headset works best.",
+ {"Diga \"ANNA\" e um comando do menu da ANNA como ele aparece agora (\"ANNA, Ativar direção automática\"), e pronto. Usa o reconhecimento de fala do Windows e o microfone padrão; um headset funciona melhor.",
+  "Sag \"ANNA\" und einen Befehl aus ANNAs Menü, wie er gerade dort steht (\"ANNA, Autopilot aktivieren\"), und er wird ausgeführt. Nutzt die Spracherkennung von Windows und das Standardmikrofon; ein Headset funktioniert am besten.",
+  "Dites \"ANNA\" puis une commande du menu d'ANNA telle qu'elle s'affiche (\"ANNA, Activer la conduite auto\"), et c'est fait. Utilise la reconnaissance vocale de Windows et le micro par défaut ; un casque fonctionne mieux.",
+  "Di \"ANNA\" y una orden del menú de ANNA tal como aparece ahora (\"ANNA, Activar conducción automática\") y se hará. Usa el reconocimiento de voz de Windows y el micrófono predeterminado; con auriculares funciona mejor.",
+  "Di \"ANNA\" y una orden del menú de ANNA tal como aparece ahora (\"ANNA, Activar manejo automático\") y se hará. Usa el reconocimiento de voz de Windows y el micrófono predeterminado; con audífonos funciona mejor.",
+  "Di \"ANNA\" e un comando del menu di ANNA così come appare ora (\"ANNA, Attiva guida automatica\"), ed è fatto. Usa il riconoscimento vocale di Windows e il microfono predefinito; con le cuffie funziona meglio.",
+  "「アンナ」と、ANNAのメニューに今表示されているコマンドを言うと実行します（「アンナ、自動運転を有効にする」）。Windowsの音声認識と既定のマイクを使います。ヘッドセットがおすすめです。",
+  "\"안나\"와 ANNA 메뉴에 지금 표시된 명령을 말하면 실행됩니다(\"안나, 자동 주행 켜기\"). Windows 음성 인식과 기본 마이크를 사용합니다. 헤드셋을 권장합니다.",
+  "說出「ANNA」和 ANNA 選單中目前顯示的指令即可執行，例如「ANNA，啟用自動駕駛」。使用 Windows 語音辨識和預設的錄音裝置；建議使用頭戴式裝置。",
+  "Řekněte \"ANNA\" a příkaz z nabídky ANNA tak, jak je právě zobrazen (\"ANNA, Zapnout autopilota\"), a provede se. Používá rozpoznávání řeči Windows a výchozí mikrofon; nejlépe funguje s headsetem.",
+  "Mondd ki: \"ANNA\", majd egy parancsot az ANNA menüjéből úgy, ahogy most látszik (\"ANNA, Robotpilóta bekapcsolása\"), és megtörténik. A Windows beszédfelismerését és az alapértelmezett mikrofont használja; fejhallgatóval működik a legjobban.",
+  "Powiedz \"ANNA\" i polecenie z menu ANNA tak, jak jest teraz wyświetlane (\"ANNA, Włącz autopilota\"), a zostanie wykonane. Korzysta z rozpoznawania mowy Windows i domyślnego mikrofonu; najlepiej działa z zestawem słuchawkowym.",
+  "Скажите \"ANNA\" и команду из меню ANNA так, как она сейчас написана (\"ANNA, Включить автопилот\"), и она выполнится. Используется распознавание речи Windows и микрофон по умолчанию; лучше всего с гарнитурой.",
+  "Zeg \"ANNA\" en een opdracht uit ANNA's menu zoals die er nu staat (\"ANNA, Automatisch rijden aan\"), en het gebeurt. Gebruikt de spraakherkenning van Windows en de standaardmicrofoon; een headset werkt het best."}},
 };
 // clang-format on
 
@@ -200,6 +216,11 @@ const char* tr(const char* english) {
     for (const Text& t : kTexts)
         if (!std::strcmp(t.en, english)) return t.t[l];
     return english;
+}
+
+const char* lang_code() {
+    const int l = language();
+    return l < 0 ? "EN" : kCodes[l];
 }
 
 std::wstring wide(const char* utf8) {

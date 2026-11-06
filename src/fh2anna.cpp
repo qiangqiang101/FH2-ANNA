@@ -27,6 +27,7 @@
 #include "cinematic.h"
 #include "lang.h"
 #include "pause.h"
+#include "voice.h"
 #include "common.h"
 #include "fh2anna.h"
 
@@ -193,6 +194,7 @@ struct Menu {
     Entry chosen_entry;
     DWORD close_at  = 0;
     DWORD touched   = 0;
+    bool listening  = false;        // woken by "ANNA": the ring lit, no rows shown (voice.cpp)
 } g_menu;
 std::atomic<bool> g_open{false};    // for the input update's thread
 uint8_t* g_status = nullptr;        // the HUD's ANNA, for ANNA's own entries
@@ -307,7 +309,8 @@ int next_enabled(int from, int step) {
 }
 
 void show_list(uint8_t* status, const std::string& list) {
-    g_menu.list = list;
+    g_menu.listening = false;
+    g_menu.list      = list;
     g_menu.shown.clear();
     g_menu.texts.clear();
     g_menu.off.clear();
@@ -323,6 +326,25 @@ void show_list(uint8_t* status, const std::string& list) {
     g_first  = 0;
     fill_window(status);
     highlight(next_enabled(0, 0));   // the first that can be chosen
+}
+
+// "ANNA" heard: ANNA wakes (its ring, its sound) with one row the row template draws as nothing,
+// listening for what's said next; the pad shows the list.
+const char kListening[] = "FH2ANNA_LISTENING";
+void listen_menu(uint8_t* status) {
+    g_menu.open      = true;
+    g_menu.chosen    = false;
+    g_menu.close_at  = 0;
+    g_menu.touched   = GetTickCount();
+    g_open           = true;
+    g_menu.listening = true;
+    g_menu.list.clear();
+    g_menu.shown.clear();
+    g_menu.off.clear();
+    g_menu.texts = {kListening};
+    g_status     = status;
+    g_first      = 0;
+    fill_window(status);
 }
 
 void open_menu(uint8_t* status) {
@@ -344,6 +366,7 @@ bool run_guarded(FH2AnnaChooseFn fn, void* user, const char* key) {
 }
 
 void close_menu(uint8_t* status) {
+    g_menu.listening = false;
     g_menu.items.clear();   // before the list lets them go
     g_menu.shown.clear();
     game<StatusFn>(RVA_STATUS_SLEEP)(status);
@@ -489,6 +512,9 @@ void choose_session(void* user, const char*) { start_matchmaking(static_cast<Ses
 
 // "Start Matchmaking for" in ANNA (on unless the Mods page says off).
 std::atomic<bool> g_matchmaking{true};
+// Voice commands (voice.cpp; off unless the Mods page says on).
+std::atomic<bool> g_voice{false};
+std::atomic<bool> g_ready{false};   // ANNA works (its hooks are in)
 int matchmaking_shown(void*, const char*) { return g_matchmaking.load() && pause_available(); }
 
 std::wstring g_ini;   // fh2-mods\FH2ANNA.ini
@@ -539,6 +565,19 @@ void hood_trunk_setting() {
         WritePrivateProfileStringW(L"Online", L"Matchmaking", value ? L"1" : L"0", g_ini.c_str());
     };
     g_api->add_setting(g_mod, &o);
+    g_voice = GetPrivateProfileIntW(L"Voice", L"Enabled", 0, g_ini.c_str()) != 0;
+    FH2Setting v{};
+    v.size        = sizeof v;
+    v.key         = "VoiceCommands";
+    v.label       = tr("Voice commands");
+    v.description = tr("Say \"ANNA\" and a command from ANNA's menu as it reads now (\"ANNA, Enable Auto Drive\"), and it's done. Uses Windows' speech recognition and the default microphone; a headset works best.");
+    v.value       = g_voice.load() ? 1 : 0;
+    v.on_change   = [](void*, const char*, int value) {
+        g_voice = value != 0;
+        WritePrivateProfileStringW(L"Voice", L"Enabled", value ? L"1" : L"0", g_ini.c_str());
+        if (g_ready.load()) voice_enable(value != 0);
+    };
+    g_api->add_setting(g_mod, &v);
 }
 
 void add_own_entries() {
@@ -724,6 +763,109 @@ void pad_hook_outermost() {
     g_api->enable_hooks(g_mod, g_pad_hook);
 }
 
+// ---- voice commands -------------------------------------------------------------------------
+// What can be said: every entry that can be chosen now, by its label as it reads now (its
+// label_now: "Close Hood" once the hood's open), wherever it is in the lists.
+// Each also with its list's label first ("Set Route To Nearest" "Bonus Board").
+void voice_commands(const std::string& list, const std::string& list_english, std::vector<VoiceCommand>& out, int depth) {
+    if (depth > 8) return;
+    const std::string list_said = list_english.empty() ? std::string() : std::string(tr(list_english.c_str()));
+    for (const Entry& e : entries_of(list)) {
+        if (!visible(e)) continue;
+        if (!e.on_choose) {   // a list: saying it opens it
+            const std::string said = tr(e.label.c_str());
+            out.push_back({said, e.label, e.key});
+            if (!list_english.empty()) out.push_back({list_said + " " + said, list_english + " " + e.label, e.key});
+            voice_commands(e.key, e.label, out, depth + 1);
+            continue;
+        }
+        if (!enabled_now(e)) continue;
+        const char* now           = e.label_now ? e.label_now(e.user, e.key.c_str()) : nullptr;
+        const std::string english = now && *now ? now : e.label;
+        const std::string said    = tr(english.c_str());
+        out.push_back({said, english, e.key});
+        if (!list_english.empty()) out.push_back({list_said + " " + said, list_english + " " + english, e.key});
+    }
+}
+
+void voice_tick(uint8_t* status) {
+    if (!g_voice.load()) return;
+    static DWORD listed = 0;
+    static std::string said;   // the commands last given to the recogniser
+    const DWORD now = GetTickCount();
+    if (now - listed >= 1000) {
+        listed = now;
+        std::vector<VoiceCommand> commands;
+        voice_commands("", "", commands, 0);
+        std::string these = lang_code();
+        for (const VoiceCommand& c : commands) these += "|" + c.key + "=" + c.phrase;
+        if (these != said) said = these, voice_set_commands(std::move(commands), lang_code());
+    }
+    // What's heard shows on ANNA as Kinect's did: "ANNA" wakes it, listening (the ring lit); a
+    // list's name opens that list; a command is found in its list, highlighted and chosen there
+    // as with the pad, then ANNA closes. While it's awake, nothing needs "ANNA" first.
+    voice_set_awake(g_menu.open);
+    std::string key;
+    while (voice_take(key)) {
+        if (!game_driving_input()) {
+            if (key.rfind("voice:", 0) != 0) logf("voice: heard %s, but a menu has the pad: not done", key.c_str());
+            continue;
+        }
+        if (key == kVoiceWake || key == kVoiceOpen) {
+            if (!g_menu.open) listen_menu(status);
+            g_menu.touched = GetTickCount();
+            continue;
+        }
+        if (key == kVoiceMissed) continue;   // still listening, till it's idle
+        if (key == kVoiceClose) {
+            if (g_menu.open && !g_menu.close_at) close_menu(status);
+            continue;
+        }
+        if (key == kVoiceBack) {
+            if (g_menu.open && !g_menu.close_at) back(status), g_menu.touched = GetTickCount();
+            continue;
+        }
+        Entry e;
+        bool found = false;
+        {
+            std::scoped_lock lk{g_entries_mu};
+            for (const Entry& o : g_entries)
+                if (o.key == key) e = o, found = true;
+        }
+        if (!found || !visible(e) || (e.on_choose && !enabled_now(e))) {
+            logf("voice: heard %s, which can't be chosen now", key.c_str());
+            continue;
+        }
+        listed = 0;   // labels may change ("Close Hood")
+        if (g_menu.close_at) {   // ANNA's showing a choice already: this one's done straight away
+            if (e.on_choose && !run_guarded(e.on_choose, e.user, e.key.c_str())) logf("%s crashed", e.key.c_str());
+            continue;
+        }
+        if (!e.on_choose) {   // a list: open, on it
+            logf("voice: opened %s", key.c_str());
+            if (!g_menu.open) open_menu(status);
+            show_list(status, e.key);
+            g_menu.touched = GetTickCount();
+            continue;
+        }
+        logf("voice: chose %s", key.c_str());
+        if (!g_menu.open) open_menu(status);
+        show_list(status, e.parent);
+        int at = -1;
+        for (int i = 0; i < static_cast<int>(g_menu.shown.size()); ++i)
+            if (g_menu.shown[i].key == key) at = i;
+        if (at < 0 || g_menu.off[at]) {   // not in its list as shown: done without it
+            if (!run_guarded(e.on_choose, e.user, e.key.c_str())) logf("%s crashed", e.key.c_str());
+            continue;
+        }
+        highlight(at);
+        const bool stays = g_menu.shown[at].stays_open;
+        choose(status);   // shown chosen; done now (stays open) or once ANNA closes
+        if (stays) g_menu.close_at = GetTickCount() + kChosenMs;   // then it closes, as for any other
+        g_menu.touched = GetTickCount();
+    }
+}
+
 void tick(uint8_t* status) {
     pad_hook_outermost();
     static uint8_t* seen = nullptr;
@@ -741,6 +883,7 @@ void tick(uint8_t* status) {
     log_car_events(car);
     if (g_close_moving.load()) close_doors_if_moving(car);
     nearest_search_tick(status);
+    voice_tick(status);
     // The update only sets the mode when it differs from the Options/Map setting (2 on PC), so the
     // first time it's set here; after that the update's own sets are kept at it (d_set_mode).
     if (o_get_mode(status) == kModeMapOnly) o_set_mode(status, kModeAnna);
@@ -769,6 +912,10 @@ void tick(uint8_t* status) {
     }
     if (ask & kAskBack) {
         back(status);
+        return;
+    }
+    if (g_menu.listening) {   // woken by voice: the pad shows the list
+        if (ask & (kAskUp | kAskDown | kAskChoose)) show_list(status, "");
         return;
     }
     const int n = static_cast<int>(g_menu.shown.size());
@@ -802,8 +949,6 @@ void d_set_mode(uint8_t* status, int mode) {
 }
 
 // ---- the interface for other mods (include/fh2anna.h) -----------------------------------------
-std::atomic<bool> g_ready{false};   // ANNA works (its hooks are in)
-
 int api_is_open() { return g_open.load() ? 1 : 0; }
 int api_uses_key(uint32_t) { return 0; }   // ANNA takes no keys: the pad only
 const FH2AnnaApi kApi = {sizeof(FH2AnnaApi), &api_is_open, &api_uses_key, &add_entry};
@@ -838,6 +983,7 @@ DWORD WINAPI start(LPVOID) {
     }
     if (!hook_cinematic()) logf("autodrive's cinematic camera keeps the HUD on");
     g_ready = true;
+    if (g_voice.load()) voice_enable(true);
     logf("ready: a tap of D-pad down opens ANNA (keys: a keyboard mod's, on the pad's buttons)");
     return 0;
 }
@@ -894,8 +1040,9 @@ FH2MOD_EXPORT int fh2mod_init(const FH2ModApi* api) {
     info.size             = sizeof info;
     info.name             = "FH2 ANNA";
     info.version          = FH2ANNA_VERSION;
+    info.github_repo      = "qiangqiang101/FH2_ANNA";
     info.platform_version = FH2MOD_PLATFORM_VERSION;
-    info.check_updates    = 0;
+    info.check_updates    = 1;
     info.description      = "ANNA, the in-car assistant Forza Horizon 2 left on its HUD: a menu while you drive, that mods can add to.";
     g_mod                 = api->register_mod(&info);
     if (!g_mod) return 1;

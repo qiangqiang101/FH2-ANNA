@@ -140,6 +140,16 @@ def arrow(name, up):
             'Margin="' + str(ROW_W // 2 - 17) + ',0,0,0"' + turn)
 
 
+# ANNA listening (voice: "ANNA" heard): awake, the ring lit, its one row FH2 ANNA gives this
+# text, drawn as nothing at all.
+LISTENING = ('                    <DataTrigger Binding="{Binding Command}" Value="FH2ANNA_LISTENING">\n'
+             '                        <Setter TargetName="Row" Property="Height" Value="0" />\n'
+             '                        <Setter TargetName="Back" Property="Visibility" Value="Hidden" />\n'
+             '                        <Setter TargetName="Label" Property="Visibility" Value="Collapsed" />\n'
+             '                        <Setter TargetName="Dpad" Property="Visibility" Value="Hidden" />\n'
+             '                    </DataTrigger>\n')
+
+
 def row_template():
     index = '{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}'
     count = '{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}'
@@ -178,7 +188,7 @@ def row_template():
             # disabled entries ("FH2ANNA_OFF:" and their label): FH2 ANNA puts their triggers here as
             # it loads this (src/fh2anna.cpp, disabled_triggers), after the highlight's, so they win
             '                    <!--FH2ANNA_OFF-->\n' + more('FH2ANNA_MORE_UP', 'MoreUp') +
-            more('FH2ANNA_MORE_DOWN', 'MoreDown') + more('FH2ANNA_MORE_NONE', None) + triggers +
+            more('FH2ANNA_MORE_DOWN', 'MoreDown') + more('FH2ANNA_MORE_NONE', None) + LISTENING + triggers +
             '                </DataTemplate.Triggers>\n'
             '            </DataTemplate>')
 
