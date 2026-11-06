@@ -18,6 +18,7 @@
 // they do nothing but let go of what they're handed. That hides every page, the HUD's and the
 // menus': the pause and an event's start stop the autodrive (drive.cpp), which brings it back.
 #include "cinematic.h"
+#include "lang.h"
 
 #include <atomic>
 #include <string>
@@ -326,8 +327,8 @@ void cinematic_settings() {
     FH2Setting s{};
     s.size        = sizeof s;
     s.key         = "AutodriveCinematic";
-    s.label       = "Autodrive cinematic camera";
-    s.description = "A few seconds into ANNA's autodrive, the camera turns to slow orbiting shots of the car and the HUD hides. Taking over brings them back.";
+    s.label       = tr("Autodrive cinematic camera");
+    s.description = tr("A few seconds into ANNA's autodrive, the camera turns to slow orbiting shots of the car and the HUD hides. Taking over brings them back.");
     s.value       = g_wanted.load() ? 1 : 0;
     s.on_change   = setting_changed;
     g_api->add_setting(g_mod, &s);

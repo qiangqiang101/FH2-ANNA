@@ -72,11 +72,14 @@ def sub(text, old, new, count=1):
 # Count: FH2's ItemsControl has no Items),
 # the list being centred on the ring's centre. Coordinates from the ring's centre.
 RING_R    = 153        # the cut: the ring's outer edge (143) and FH3's 10 between
-LIST_LEFT = 122        # the rows start here, under the ring (the cut makes their left ends), the
+LIST_LEFT = 72         # the rows start here, under the ring (the cut makes their left ends), the
                        # text (right-aligned in 214) then starting 15 clear of the cut
-ROW_W     = 268        # a row's background (FH3's), then 3 and the d-pad's 36
-ROW_H     = 36
-PITCH     = 39         # a row and its 1.5 + 1.5 margins
+ROW_W     = 318        # a row's background (FH3's), then 3 and the d-pad's 36
+ROW_H     = 34
+LIST_UP   = 5          # the list's middle this far above the ring's centre
+ARC_UP    = 5          # the rows' arc cut: its centre this far above the ring's centre
+DPAD      = ROW_H      # the d-pad's square, beside the row (3 between)
+PITCH     = 37         # a row and its 1.5 + 1.5 margins
 MAX_ROWS  = 14
 SHOWN     = 6          # FH2 ANNA's window (src/fh2anna.cpp kRows): when it scrolls, the list is
                        # these and a "more" row above and below, those MORE_H high
@@ -103,7 +106,7 @@ def heights(count):
 
 def row_shape(count, index):
     h = heights(count)
-    top = -sum(x + 3 for x in h) / 2 + sum(x + 3 for x in h[:index]) + 1.5
+    top = ARC_UP - LIST_UP - sum(x + 3 for x in h) / 2 + sum(x + 3 for x in h[:index]) + 1.5
     height = h[index]
     steps = 12
     pts = [(left_edge(top + height * k / steps), height * k / steps) for k in range(steps + 1)]
@@ -151,16 +154,16 @@ def row_template():
                          '                        <Setter TargetName="Back" Property="Data" Value="' + row_shape(n, i) + '"/>\n'
                          '                    </MultiDataTrigger>\n')
     return ('<DataTemplate x:Key="A_DataTemplate_SpeechItem">\n'
-            '                <Grid x:Name="Row" Width="' + str(ROW_W + 39) + '" Height="' + str(ROW_H) + '" Margin="0,1.5,0,1.5">\n'
+            '                <Grid x:Name="Row" Width="' + str(ROW_W + 3 + DPAD) + '" Height="' + str(ROW_H) + '" Margin="0,1.5,0,1.5">\n'
             '                    <Path x:Name="Back" HorizontalAlignment="Left" VerticalAlignment="Top" Fill="' + BACK + '" '
             'Data="M0,0 L' + str(ROW_W) + ',0 L' + str(ROW_W) + ',' + str(ROW_H) + ' L0,' + str(ROW_H) + ' Z"/>\n'
-            '                    <local:FZTextBlock x:Name="Label" Text="{Binding Command}" Style="{StaticResource FH2ANNA_Text}" Margin="0,0,47,0" '
+            '                    <local:FZTextBlock x:Name="Label" Text="{Binding Command}" Style="{StaticResource FH2ANNA_Text}" FontSize="25" Margin="0,-1,' + str(DPAD + 11) + ',1" '
             'Width="{StaticResource A_Double_SpeechOptionWidth}" VerticalAlignment="Center" HorizontalAlignment="Right" />\n'
             # "there's more that way" rows (FH2 ANNA gives them these texts): the pause menu's arrow,
             # on a shorter, fainter row
             + arrow('MoreUp', True) + arrow('MoreDown', False) +
             # the button that chooses, on a dark square (FH2's d-pad is white: on the yellow it'd vanish)
-            '                    <local:FZMaterial x:Name="Dpad" HorizontalAlignment="Right" Width="36" Height="36" '
+            '                    <local:FZMaterial x:Name="Dpad" HorizontalAlignment="Right" Width="' + str(DPAD) + '" Height="' + str(DPAD) + '" '
             'Color="' + ON_THEME + '" Visibility="Hidden">\n'
             '                        <local:FZMaterial ImageSource="{StaticResource FH2ANNA_Icon_Choose}" '
             'Width="28" Height="28" Color="White" />\n'
@@ -233,8 +236,8 @@ def port(t):
     listbox = block[a:b]
     t = t[:start] + ('<Canvas x:Name="HUDAnnaControl_ANNAOptions" Style="{StaticResource A_Style_FrameworkElement_HideIfMapOnly}" '
                      'HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="0" Height="0" Margin="146,0,0,135">\n'
-                     '            <Grid Canvas.Left="' + str(LIST_LEFT) + '" Canvas.Top="-500" Height="1000">\n'
-                     '                <StackPanel x:Name="ANNAMain" Orientation="Vertical" VerticalAlignment="Center" Width="' + str(ROW_W + 39) + '">\n'
+                     '            <Grid Canvas.Left="' + str(LIST_LEFT) + '" Canvas.Top="' + str(-500 - LIST_UP) + '" Height="1000">\n'
+                     '                <StackPanel x:Name="ANNAMain" Orientation="Vertical" VerticalAlignment="Center" Width="' + str(ROW_W + 3 + DPAD) + '">\n'
                      '                    ' + listbox.replace('<local:CommonListBox ', '<local:CommonListBox AlternationCount="' + str(MAX_ROWS) + '" ', 1) + '\n'
                      '                </StackPanel>\n'
                      '            </Grid>\n'

@@ -117,16 +117,34 @@ bool replace_resource(void** out, const std::string& text) {
     }
 }
 
+const char kBom[] = "\xEF\xBB\xBF";   // UTF-8's byte order mark
+
 bool has(const char* bytes, int length, const char* what) {
     const std::size_t n = std::strlen(what);
     const char* end     = bytes + length;
     return std::search(bytes, end, what, what + n) != end;
 }
 
+// The mod platform's pages (the Mods page, each mod's page: "FH2Mod_" names) carry mods' labels as
+// UTF-8 but without a BOM, so the loader reads them a byte a character and any other language's
+// text comes out garbled. With UTF-8 in one, it gets the BOM it needs.
+bool platform_page_needs_bom(const char* bytes, int length) {
+    if (length < 3 || !std::memcmp(bytes, kBom, 3) || !has(bytes, length, "FH2Mod_")) return false;
+    if (std::none_of(bytes, bytes + length, [](char c) { return static_cast<unsigned char>(c) >= 0x80; })) return false;
+    return MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, bytes, length, nullptr, 0) > 0;   // UTF-8 indeed
+}
+
 void edit(void** out) {
     const char* bytes = nullptr;
     int length        = 0;
     if (!resource_text(*out, &bytes, &length)) return;
+    if (platform_page_needs_bom(bytes, length)) {
+        static std::atomic<bool> logged{false};
+        std::string text(kBom, 3);
+        text.append(bytes, static_cast<std::size_t>(length));
+        if (replace_resource(out, text) && !logged.exchange(true)) logf("a Mods page with UTF-8 text: given its BOM, so it shows as written");
+        return;
+    }
     if (!has(bytes, std::min(length, 2048), "x:Class=\"ForzaUI.HUDAnnaControl\"")) return;
     std::string text(bytes, static_cast<std::size_t>(length));
     // FH3's control, ported (assets/HUDAnnaControl.xaml); FH2's own, restyled, if that's missing.
@@ -134,10 +152,13 @@ void edit(void** out) {
     DWORD port_size  = 0;
     if (resource("ANNA_XAML", &port, &port_size)) {
         const char* p = static_cast<const char*>(port);
-        if (port_size >= 3 && !std::memcmp(p, "ï»¿", 3)) p += 3, port_size -= 3;   // a BOM
+        if (port_size >= 3 && !std::memcmp(p, kBom, 3)) p += 3, port_size -= 3;
         text.assign(p, port_size);
         static const char marker[] = "<!--FH2ANNA_OFF-->";   // greyed-out entries' triggers go here
         if (const std::size_t at = text.find(marker); at != std::string::npos) text.replace(at, sizeof marker - 1, disabled_triggers());
+        // The greyed-out entries' labels are in the game's language: UTF-8, which the loader reads
+        // as such only after a BOM (as Extra Options writes its pages); without one, a byte a character.
+        text.insert(0, kBom, 3);
         if (replace_resource(out, text) && !g_restyled.exchange(true)) logf("the ANNA control is FH3's");
         return;
     }

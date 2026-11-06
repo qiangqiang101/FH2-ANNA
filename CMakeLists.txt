@@ -9,7 +9,7 @@ endif()
 
 add_subdirectory(platform)   # fh2mod_platform (DWrite.dll) and fh2mod_api
 
-add_library(fh2anna SHARED src/fh2anna.cpp src/anna_xaml.cpp src/actions.cpp src/car.cpp src/drive.cpp src/cinematic.cpp src/textures.cpp src/resources.rc)
+add_library(fh2anna SHARED src/fh2anna.cpp src/anna_xaml.cpp src/actions.cpp src/car.cpp src/drive.cpp src/pause.cpp src/lang.cpp src/cinematic.cpp src/textures.cpp src/resources.rc)
 # rc files don't track what they embed
 file(GLOB FH3_TEXTURES CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/assets/*.swatchbin ${CMAKE_SOURCE_DIR}/assets/*.xaml)
 set_source_files_properties(src/resources.rc PROPERTIES OBJECT_DEPENDS "${FH3_TEXTURES}")
