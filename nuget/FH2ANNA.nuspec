@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- FH2 ANNA's interface for other mods, as a native NuGet package: fh2anna.h, put on the
+     include path of any C/C++ project that installs it (build/native/FH2ANNA.targets).
+     Packed by .github/workflows/build.yml (dotnet pack nuget/FH2ANNA.csproj), which fills in
+     $version$, $repository$ and $commit$. -->
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>FH2ANNA</id>
+    <version>$version$</version>
+    <title>FH2 ANNA interface</title>
+    <authors>qiangqiang101</authors>
+    <description>The interface other Forza Horizon 2 platform mods use to add entries and lists to FH2 ANNA's menu: fh2anna.h, added to your project's include path.</description>
+    <summary>Add entries to FH2 ANNA's in-car menu from your FH2 mod.</summary>
+    <license type="expression">MIT</license>
+    <projectUrl>https://github.com/$repository$</projectUrl>
+    <repository type="git" url="https://github.com/$repository$" commit="$commit$" />
+    <tags>native nativepackage forza-horizon-2 fh2 mod anna</tags>
+    <readme>README.md</readme>
+  </metadata>
+  <files>
+    <file src="../include/fh2anna.h" target="build/native/include" />
+    <file src="FH2ANNA.targets" target="build/native" />
+    <file src="README.md"/>
+    <file src="../LICENSE"/>
+  </files>
+</package>

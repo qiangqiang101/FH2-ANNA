@@ -93,7 +93,7 @@ They're saved in `fh2-mods\FH2ANNA.ini`.
 
 ## For mod developers: adding to ANNA's menu
 
-Other platform mods can add entries and lists to ANNA through its interface, [`include/fh2anna.h`](include/fh2anna.h):
+Other platform mods can add entries and lists to ANNA through its interface, [`include/fh2anna.h`](include/fh2anna.h). Copy the header into your mod, or get it as the **FH2ANNA** NuGet package from this repo's GitHub Packages feed, which puts it on your C/C++ project's include path (Visual Studio: add `https://nuget.pkg.github.com/qiangqiang101/index.json` as a package source, signed in with a GitHub token that can read packages, then install FH2ANNA):
 
 ```c
 #include "fh2anna.h"
@@ -119,8 +119,8 @@ ANNA's own lists are `car`, `car.lights`, `car.doors`, `route` and `online`. An 
 You need CMake and either Visual Studio 2022 or [llvm-mingw](https://github.com/mstorsjo/llvm-mingw). The FH2 Mod Platform is a submodule:
 
 ```sh
-git clone --recursive https://github.com/qiangqiang101/FH2ANNA.git
-cd FH2ANNA
+git clone --recursive https://github.com/qiangqiang101/FH2_ANNA.git
+cd FH2_ANNA
 
 # Visual Studio 2022
 cmake -S . -B build -G "Visual Studio 17 2022" -A x64
@@ -131,7 +131,7 @@ cmake -S . -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE=platform/cmake/mingw-w64-x86
 cmake --build build                                       # build/FH2ANNA.dll
 ```
 
-Releases are built by GitHub Actions ([`.github/workflows/build.yml`](.github/workflows/build.yml)) when a release is published, and on demand from the Actions tab (**Run workflow**). A release's tag has to match `VERSION` in `CMakeLists.txt`.
+Releases are built by GitHub Actions ([`.github/workflows/build.yml`](.github/workflows/build.yml)) when a release is published, and on demand from the Actions tab (**Run workflow**). A release's tag has to match `VERSION` in `CMakeLists.txt`. Publishing a release also publishes the FH2ANNA NuGet package (the header, [`nuget/`](nuget/)) to GitHub Packages, at the same version; a manual run only uploads it as an artifact.
 
 ### The FH3 assets
 

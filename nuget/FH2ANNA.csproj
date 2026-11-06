@@ -1,0 +1,10 @@
+<!-- Only there for `dotnet pack` to pack FH2ANNA.nuspec: nothing is built from it. -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+    <NuspecFile>FH2ANNA.nuspec</NuspecFile>
+    <NuspecBasePath>$(MSBuildThisFileDirectory)</NuspecBasePath>
+  </PropertyGroup>
+</Project>

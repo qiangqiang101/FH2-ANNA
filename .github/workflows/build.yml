@@ -1,8 +1,10 @@
 name: Build
 
 # Builds FH2 ANNA only when asked:
-#   - publishing a release builds it and attaches FH2ANNA-<tag>.zip to that release
-#   - "Run workflow" on the Actions tab builds it and uploads the zip as an artifact
+#   - publishing a release builds it, attaches FH2ANNA-<tag>.zip to that release, and publishes
+#     the FH2ANNA NuGet package (fh2anna.h, for other mods; nuget/) to GitHub Packages
+#   - "Run workflow" on the Actions tab builds it and uploads the zip and the package as
+#     artifacts (the package as <version>-ci.<run>, not published)
 #
 # The zip ships the FH2 Mod Platform as DWrite.dll only. Azimuth 1.0.3 no longer loads
 # d3dcompiler_47.dll, so that copy is left out.
@@ -46,8 +48,10 @@ jobs:
               exit 1
             fi
             echo "name=FH2ANNA-${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+            echo "package=${version}" >> "$GITHUB_OUTPUT"
           else
             echo "name=FH2ANNA-v${version}-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+            echo "package=${version}-ci.${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Build
@@ -84,6 +88,30 @@ jobs:
           path: dist/
           if-no-files-found: error
 
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Pack the NuGet package
+        run: |
+          # FH2 ANNA's interface for other mods: include/fh2anna.h, as a native package (nuget/).
+          dotnet pack nuget/FH2ANNA.csproj -c Release -o nupkg             -p:NuspecProperties="version=${{ steps.name.outputs.package }};repository=${GITHUB_REPOSITORY};commit=${GITHUB_SHA}"
+          ls -l nupkg
+
+      - name: Upload the package as an artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FH2ANNA-nuget-${{ steps.name.outputs.package }}
+          path: nupkg/*.nupkg
+          if-no-files-found: error
+
+      - name: Publish the package to GitHub Packages
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          dotnet nuget push "nupkg/*.nupkg"             --source "https://nuget.pkg.github.com/${GITHUB_REPOSITORY_OWNER}/index.json"             --api-key "$GH_TOKEN" --skip-duplicate
+
       - name: Attach to the release
         if: github.event_name == 'release'
         env:
@@ -92,3 +120,4 @@ jobs:
 
     permissions:
       contents: write   # attaching the zip to the release
+      packages: write   # publishing the NuGet package

@@ -1,2 +1,6 @@
 build/
 tools/shots/
+
+# dotnet pack (nuget/)
+nuget/bin/
+nuget/obj/
