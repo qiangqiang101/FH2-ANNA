@@ -12,8 +12,10 @@ void note_local_car(void* car);    // the player's car this frame (from the HUD'
 Signal signal_on();
 void set_signal(Signal s);         // the same one again turns it off
 
-bool autodrive_possible();         // a route to drive, and the car's the player's to give
+bool autodrive_possible();         // a route to drive (the sat-nav's or the game's), and the car the player's
 bool autodriving();
 void toggle_autodrive();           // starts (at the sat-nav's next update) or stops
+
+bool in_free_roam();               // not in an event or a race (as the player's car last saw)
 
 } // namespace fh2anna

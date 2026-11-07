@@ -504,7 +504,11 @@ void choose_headlights(void*, const char*) {
     void* car = player_car();
     if (car) set_headlights(car, !headlights_on(car));
 }
-void choose_route(void* user, const char*) { set_route(static_cast<Route>(reinterpret_cast<uintptr_t>(user))); }
+void choose_route(void* user, const char*) {
+    if (in_free_roam()) set_route(static_cast<Route>(reinterpret_cast<uintptr_t>(user)));
+}
+// Not in a race or an event: it'd set the GPS there, and autodrive would drive it.
+int route_enabled(void*, const char*) { return in_free_roam(); }
 // The pause menu's tiles (pause.cpp): shown once the pause flow's been seen waiting for Start.
 int pause_shown(void*, const char*) { return pause_available(); }
 void choose_tile(void* user, const char*) { press_pause_tile(static_cast<PauseTile>(reinterpret_cast<uintptr_t>(user))); }
@@ -603,11 +607,11 @@ void add_own_entries() {
     for (int i = 0; i < kParts; ++i) add(kPartKeys[i], "car.doors", kPartLabels[i], choose_part, part_shown, part_label);
     add("car.tune", "car", "Tune Car", choose_tile, pause_shown, nullptr, reinterpret_cast<void*>(PauseTile::TuneCar));
     add("route", nullptr, "Set Route To Nearest");
-    add("route.race", "route", "Race", choose_route, nullptr, nullptr, reinterpret_cast<void*>(Route::Race));
-    add("route.bucketlist", "route", "Bucket List", choose_route, nullptr, nullptr, reinterpret_cast<void*>(Route::BucketList));
-    add("route.festival", "route", "Festival", choose_route, nullptr, nullptr, reinterpret_cast<void*>(Route::Festival));
-    add("route.barnfind", "route", "Barn Find", choose_route, nullptr, nullptr, reinterpret_cast<void*>(Route::BarnFind));
-    add("route.bonusboard", "route", "Bonus Board", choose_route, nullptr, nullptr, reinterpret_cast<void*>(Route::BonusBoard));
+    add("route.race", "route", "Race", choose_route, nullptr, nullptr, reinterpret_cast<void*>(Route::Race), route_enabled);
+    add("route.bucketlist", "route", "Bucket List", choose_route, nullptr, nullptr, reinterpret_cast<void*>(Route::BucketList), route_enabled);
+    add("route.festival", "route", "Festival", choose_route, nullptr, nullptr, reinterpret_cast<void*>(Route::Festival), route_enabled);
+    add("route.barnfind", "route", "Barn Find", choose_route, nullptr, nullptr, reinterpret_cast<void*>(Route::BarnFind), route_enabled);
+    add("route.bonusboard", "route", "Bonus Board", choose_route, nullptr, nullptr, reinterpret_cast<void*>(Route::BonusBoard), route_enabled);
     add("online", nullptr, "Start Matchmaking for", nullptr, matchmaking_shown);
     add("online.roadtrip", "online", "Online Road Trip", choose_session, nullptr, nullptr, reinterpret_cast<void*>(Session::RoadTrip));
     add("online.freeroam", "online", "Online Freeroam", choose_session, nullptr, nullptr, reinterpret_cast<void*>(Session::FreeRoam));

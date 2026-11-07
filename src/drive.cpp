@@ -20,6 +20,14 @@
 // at +0x8A. Starting and stopping happen in the sat-nav's update, as Extra Options does. It
 // stops when the player touches the gas, the brake or the steering (read with the game's own
 // GetAnalog, so FH2 Mouse & Keyboard's keys count), on arrival, or when anything changes.
+//
+// A route the game set (an event's, a race's, a road trip's) isn't the sat-nav's: it's in the
+// car's CarRouteTrackingComponent bindings (car +0x4F70, vtable 0x2F5D850), the Event binding's
+// route at +0x10 and, in an event, a road trip's GroupSatNav (+0x88) or PersonalSatNav (+0x60),
+// each valid while its +8 is 1. The game tracks those itself (checkpoints, laps), so the AI just
+// takes the car. That's driven from the player's car update, in free roam or while the game's
+// presentation (0x354F4F8 +0x50 -> 0xF9AE70, its +0x3CC) is a driving one (3, 4, 6, 9, 12), as
+// Extra Options' "autodrive in events" does; while there's such a route it's the one driven.
 #include "drive.h"
 #include "car.h"
 #include "cinematic.h"
@@ -50,6 +58,10 @@ constexpr uintptr_t RVA_CONTEXT_HOLDER  = 0x34C0F40;
 constexpr uintptr_t RVA_GET_ANALOG      = 0x106F040;  // float (input, context, control)
 constexpr uintptr_t RVA_INPUTS          = 0x365D7C8;
 constexpr uintptr_t INPUTS_CURRENT      = 0xAB28;
+constexpr uintptr_t RVA_PRESENTATIONS   = 0x354F4F8;
+constexpr uintptr_t RVA_PRESENTATION    = 0xF9AE70;   // (manager, shared* out)
+constexpr uintptr_t RVA_ROUTE_BINDINGS_VTABLE = 0x2F5D850;
+constexpr uintptr_t CAR_ROUTE_BINDINGS  = 0x4F70;
 constexpr uintptr_t CAR_DRIVER = 0x4D10, CAR_DRIVER_MODE = 0x4D30, CAR_SIGNALS = 0x51BB;
 constexpr int kModePlayer = 1, kModeAi = 0;
 
@@ -144,8 +156,12 @@ struct Drive {
     void* route      = nullptr;
     float elapsed    = 0;       // seconds of it
     bool cinematic_tried = false;
-} g_drive;                           // the sat-nav's update only
+    bool event       = false;   // the game's route (the car's update), not the sat-nav's
+} g_drive;                           // the sat-nav's and the player's car's updates (one thread)
 std::atomic<bool> g_driving{false};
+std::atomic<void*> g_event_car{nullptr};   // the car with a route the game set, as last seen
+std::atomic<bool> g_event_ready{false};    // ... and it may be driven now
+std::atomic<bool> g_roam{true};            // free roam, as the player's car's update last saw
 
 void* route_of(uint8_t* satnav, bool* arrived) {
     *arrived = false;
@@ -191,6 +207,40 @@ bool free_roam(const char** why = nullptr) {
     return g_context == 2 || no("not free roam");
 }
 
+// The game's presentation of what's on (-1: unknown).
+int presentation_mode() {
+    uint8_t* services = *reinterpret_cast<uint8_t**>(g_base + RVA_PRESENTATIONS);
+    uint8_t* manager  = services ? *reinterpret_cast<uint8_t**>(services + 0x50) : nullptr;
+    if (!manager || !*reinterpret_cast<void**>(manager + 8)) return -1;
+    Shared sh{};
+    game<ContextFn>(RVA_PRESENTATION)(manager, reinterpret_cast<void**>(&sh));
+    const int mode = sh.obj ? *reinterpret_cast<int*>(static_cast<uint8_t*>(sh.obj) + 0x3CC) : -1;
+    release_shared(sh);
+    return mode;
+}
+
+// A route the game set for the car (an event's, a race's), or null.
+void* event_route(uint8_t* car, bool roam) {
+    uint8_t* bindings = *reinterpret_cast<uint8_t**>(car + CAR_ROUTE_BINDINGS);
+    if (!bindings || *reinterpret_cast<uint8_t**>(bindings) != g_base + RVA_ROUTE_BINDINGS_VTABLE) return nullptr;
+    static const uintptr_t kOffsets[] = {0x10, 0x88, 0x60};   // Event; in events, a road trip's too
+    for (size_t i = 0; i < (roam ? 1u : 3u); ++i) {
+        void** property = *reinterpret_cast<void***>(bindings + kOffsets[i]);
+        uint8_t* route  = property ? static_cast<uint8_t*>(*property) : nullptr;
+        if (route && route[8] == 1) return route;
+    }
+    return nullptr;
+}
+
+// The game's route may be driven: free roam, or a race / event with the car's controls the player's.
+bool event_allowed(bool roam) {
+    if (roam) return true;
+    switch (presentation_mode()) {
+        case 3: case 4: case 6: case 9: case 12: return game_driving_input();
+        default: return false;
+    }
+}
+
 // The tracker follows this sat-nav (its weak pointer at +0x98), and isn't following a route yet.
 bool tracker_ready(uint8_t* tracker, uint8_t* satnav) {
     if (!tracker || !*reinterpret_cast<void**>(tracker + 0x130) || *reinterpret_cast<void**>(tracker + 0x128)) return false;
@@ -229,27 +279,27 @@ void start_driving(uint8_t* satnav) {
         game<TrackerFn>(RVA_END_ROUTE)(tracker);
         return logf("autodrive: the AI didn't take the car");
     }
-    g_drive   = {car, tracker, route, 0, false};
+    g_drive   = {car, tracker, route, 0, false, false};
     g_driving = true;
     logf("autodrive on");
 }
 
+void start_event_drive(uint8_t* car, void* route, bool allowed) {
+    if (!allowed) return logf("autodrive: not here (context %d, presentation %d)", g_context, presentation_mode());
+    if (driver_mode(car) != kModePlayer) return logf("autodrive: the car isn't the player's to give");
+    if (!set_ai(car, true)) return logf("autodrive: the AI didn't take the car");
+    g_drive   = {car, nullptr, route, 0, false, true};
+    g_driving = true;
+    logf("autodrive on (the game's route, context %d)", g_context);
+}
+
 constexpr float kCinematicAfter = 3;   // seconds, as Extra Options
 
-void drive_tick(uint8_t* satnav, float dt) {
-    if (g_want.exchange(false)) {
-        if (g_drive.car) stop_driving("asked", true);
-        else start_driving(satnav);
-    }
-    if (!g_drive.car) return;
-    bool arrived = false;
-    void* route  = route_of(satnav, &arrived);
-    // Why it ends; with a flash when the player took over or it got there.
+// What both kinds of drive check each update, after their own. Why it ends; with a flash when
+// the player took over or it got there.
+void driving_tick(float dt) {
     if (g_drive.car != g_local_car.load()) return stop_driving("another car");
     if (driver_mode(g_drive.car) != kModeAi) return stop_driving("the AI let go");
-    if (arrived) return stop_driving("arrived", true);
-    if (route != g_drive.route) return stop_driving("the route changed", true);
-    if (!free_roam()) return stop_driving("not free roam");
     if (analog(0) > 0.1f || analog(1) > 0.1f) return stop_driving("gas / brake", true);
     if (std::fabs(steering()) > 0.15f) return stop_driving("steering", true);
     if (cinematic_on() && !game_driving_input()) return stop_driving("a menu opened");   // it'd be hidden
@@ -262,10 +312,67 @@ void drive_tick(uint8_t* satnav, float dt) {
     }
 }
 
+// The sat-nav's update: its route (the one the player set).
+void drive_tick(uint8_t* satnav, float dt) {
+    if (g_drive.event) return;   // the car's update has it
+    // While the game set a route for the car, that's the one: the car's update starts it.
+    if (!g_drive.car && g_event_car.load() && g_event_car.load() == g_local_car.load()) return;
+    if (g_want.exchange(false)) {
+        if (g_drive.car) stop_driving("asked", true);
+        else start_driving(satnav);
+    }
+    if (!g_drive.car) return;
+    bool arrived = false;
+    void* route  = route_of(satnav, &arrived);
+    if (arrived) return stop_driving("arrived", true);
+    if (route != g_drive.route) return stop_driving("the route changed", true);
+    if (!free_roam()) return stop_driving("not free roam");
+    driving_tick(dt);
+}
+
+// The player's car's update: the route the game set (an event's, a race's).
+void event_tick(uint8_t* car, float dt) {
+    const bool roam = free_roam();
+    g_roam          = roam || g_context == 2;   // paused in free roam is still free roam
+    if (g_drive.car && !g_drive.event) {   // a sat-nav drive's on
+        g_event_car = nullptr, g_event_ready = false;
+        return;
+    }
+    void* route     = event_route(car, roam);
+    const bool ok   = route && event_allowed(roam);
+    g_event_car     = route ? car : nullptr;
+    g_event_ready   = ok;
+    static int was = -1;   // what's logged: free roam, a game's route, it may be driven
+    const int now  = (g_roam.load() ? 1 : 0) | (route ? 2 : 0) | (ok ? 4 : 0);
+    if (now != was) {
+        was = now;
+        logf("autodrive: %s, %s the game's route%s (context %d, presentation %d)", g_roam.load() ? "free roam" : "an event",
+             route ? "with" : "without", route ? (ok ? ", drivable" : ", not drivable here") : "", g_context, presentation_mode());
+    }
+    if (!g_drive.car) {
+        if (route && g_want.exchange(false)) start_event_drive(car, route, ok);
+        return;
+    }
+    if (g_want.exchange(false)) return stop_driving("asked", true);
+    if (car != g_drive.car) return stop_driving("another car");
+    if (!route) return stop_driving("the route went", true);
+    if (route != g_drive.route) return stop_driving("the route changed", true);
+    if (!ok) return stop_driving("not here");
+    driving_tick(dt);
+}
+
 // ---- the hooks ------------------------------------------------------------------------------
 bool signals_guarded(uint8_t* car) {
     __try {
         signals_tick(car);
+        return true;
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
+        return false;
+    }
+}
+bool event_guarded(uint8_t* car, float dt) {
+    __try {
+        event_tick(car, dt);
         return true;
     } __except (EXCEPTION_EXECUTE_HANDLER) {
         return false;
@@ -292,6 +399,12 @@ uintptr_t d_car_update(void* car, float dt, float frame_dt, unsigned frame) {
     static bool failed = false;
     const bool mine = car && car == g_local_car.load();
     if (!failed && mine && !signals_guarded(static_cast<uint8_t*>(car))) failed = true, logf("the signals crashed; off");
+    static bool event_failed = false;
+    if (!event_failed && mine && !event_guarded(static_cast<uint8_t*>(car), dt)) {
+        event_failed = true, g_event_car = nullptr, g_event_ready = false;
+        if (g_drive.event) g_drive = {}, g_driving = false;
+        logf("autodrive on the game's routes crashed; off");
+    }
     if (mine) note_headlights(car), apply_headlights(car);
     const uintptr_t r = o_car_update(car, dt, frame_dt, frame);
     if (mine) apply_headlights(car);
@@ -307,7 +420,7 @@ uintptr_t d_satnav_update(void* satnav, float dt) {
 }
 
 uintptr_t d_satnav_off(void* satnav) {
-    if (satnav == g_satnav.load()) {
+    if (satnav == g_satnav.load() && !g_drive.event) {
         stop_guarded("the sat-nav went");
         g_satnav = nullptr;
     }
@@ -378,11 +491,15 @@ void set_signal(Signal s) {
 
 bool autodrive_possible() {
     if (g_driving.load()) return true;
+    void* car = g_local_car.load();
+    if (car && g_event_car.load() == car) return g_event_ready.load();
     bool arrived = false;
     return g_satnav.load() && route_of(g_satnav.load(), &arrived) && !arrived;
 }
 
 bool autodriving() { return g_driving.load(); }
+
+bool in_free_roam() { return g_roam.load(); }
 
 void toggle_autodrive() { g_want = true; }
 
