@@ -43,7 +43,7 @@ ANNA speaks the game's language: English, French, German, Italian, Spanish (Spai
 | Controller | Keyboard ([FH2 Mouse & Keyboard](https://github.com/qiangqiang101/FH2Mouse)) | Does |
 |---|---|---|
 | Tap D-pad down | C | Open ANNA (C again closes it) |
-| D-pad up / down | I / K | Move up / down the list |
+| D-pad up / down | I / K | Move up / down the list (hold to keep moving) |
 | D-pad right | L | Choose |
 | D-pad left | J | Back (closes ANNA from the top list) |
 
@@ -113,6 +113,8 @@ if (anna) {
 ```
 
 ANNA's own lists are `car`, `car.lights`, `car.doors`, `route` and `online`. An entry without `on_choose` is a list of its own. Entries can hide themselves (`shown`), change their label each time their list opens (`label_now`), keep ANNA open after they're chosen (`stays_open`), and show greyed out (`enabled`). `on_choose` runs on the game's thread. Your entries can be said as voice commands too, by their label. The header has the details.
+
+A mod that takes the player's driving input for itself on purpose (a camera the sticks fly, with the car's controls switched off) can tell ANNA so with `hold_input(1)`, and `hold_input(0)` when it gives it back (interface version 5). Meanwhile Auto Drive keeps driving, in races too, instead of taking it for a menu or the pause.
 
 ## Building
 

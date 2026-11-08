@@ -3,7 +3,7 @@
  *   const FH2AnnaApi* anna = (const FH2AnnaApi*)api->get_interface(FH2ANNA_INTERFACE, 4);
  *
  * Look it up after wait_for_mods (mods start in name order); NULL without FH2 ANNA (or an older
- * one, for version 2).
+ * one, for version 2). Ask for version 5 for hold_input, falling back to 4 without it.
  *
  * Adding to the menu (version 2):
  *
@@ -68,6 +68,12 @@ typedef struct FH2AnnaApi {
     /* Adds an entry (copied). Returns 1, or 0 if the key is taken or the entry is incomplete. Add
        entries any time; they show from the next time their list opens. */
     int (*add_entry)(const FH2AnnaEntry* entry);
+    /* ---- version 5 ---- */
+    /* A mod has taken the player's driving input for itself on purpose (a camera of its own that the
+       sticks fly, say, with the game's driving-input permission cleared so the car doesn't steer):
+       1 while it has, 0 when it's given back. Meanwhile ANNA's autodrive doesn't take that for a
+       menu or the pause and keeps driving (in events too). ANNA itself stays closed. Any thread. */
+    void (*hold_input)(int held);
 } FH2AnnaApi;
 
 #endif

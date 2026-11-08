@@ -232,11 +232,12 @@ void* event_route(uint8_t* car, bool roam) {
     return nullptr;
 }
 
-// The game's route may be driven: free roam, or a race / event with the car's controls the player's.
+// The game's route may be driven: free roam, or a race / event with the car's controls the player's
+// (or held by a mod that's taken them on purpose, as ANNA Drone Mode's camera does).
 bool event_allowed(bool roam) {
     if (roam) return true;
     switch (presentation_mode()) {
-        case 3: case 4: case 6: case 9: case 12: return game_driving_input();
+        case 3: case 4: case 6: case 9: case 12: return game_driving_input() || input_held();
         default: return false;
     }
 }
@@ -302,7 +303,7 @@ void driving_tick(float dt) {
     if (driver_mode(g_drive.car) != kModeAi) return stop_driving("the AI let go");
     if (analog(0) > 0.1f || analog(1) > 0.1f) return stop_driving("gas / brake", true);
     if (std::fabs(steering()) > 0.15f) return stop_driving("steering", true);
-    if (cinematic_on() && !game_driving_input()) return stop_driving("a menu opened");   // it'd be hidden
+    if (cinematic_on() && !game_driving_input() && !input_held()) return stop_driving("a menu opened");   // it'd be hidden
     if (dt > 0 && dt <= 1) g_drive.elapsed += dt;
     if (!g_drive.cinematic_tried && cinematic_wanted() && g_drive.elapsed >= kCinematicAfter) {
         g_drive.cinematic_tried = true;

@@ -83,6 +83,10 @@ PITCH     = 37         # a row and its 1.5 + 1.5 margins
 MAX_ROWS  = 14
 SHOWN     = 6          # FH2 ANNA's window (src/fh2anna.cpp kRows): when it scrolls, the list is
                        # these and a "more" row above and below, those MORE_H high
+TITLE_UP  = 8          # the list's first item is its header, no height at all: a list opened from
+                       # another has its title there (its text), drawn this far above the rows below
+                       # it; when the list scrolls and the "more" row above the entries shows nothing
+                       # (at its top: FH2 ANNA marks the header selected then), over that row instead
 MORE_H    = 22
 ARROW     = '/ForzaUI;component/Textures/Anthem/SocialFeedIcons/Scroll_Arrow.png'   # the pause menu's (pointing down)
 BACK      = '#B0383838'   # FH3's rows: grey, see-through
@@ -99,14 +103,20 @@ def left_edge(y):
 
 
 def heights(count):
-    if count == SHOWN + 2:
-        return [MORE_H] + [ROW_H] * SHOWN + [MORE_H]
-    return [ROW_H] * count
+    """The rows' heights: the header (none), then the entries (and, scrolling, the "more" rows)."""
+    rows = count - 1
+    if rows == SHOWN + 2:
+        return [0, MORE_H] + [ROW_H] * SHOWN + [MORE_H]
+    return [0] + [ROW_H] * rows
+
+
+def pitch(height):
+    return height + 3 if height else 0   # a row and its margins; the header has neither
 
 
 def row_shape(count, index):
     h = heights(count)
-    top = ARC_UP - LIST_UP - sum(x + 3 for x in h) / 2 + sum(x + 3 for x in h[:index]) + 1.5
+    top = ARC_UP - LIST_UP - sum(pitch(x) for x in h) / 2 + sum(pitch(x) for x in h[:index]) + 1.5
     height = h[index]
     steps = 12
     pts = [(left_edge(top + height * k / steps), height * k / steps) for k in range(steps + 1)]
@@ -153,9 +163,27 @@ LISTENING = ('                    <DataTrigger Binding="{Binding Command}" Value
 def row_template():
     index = '{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}'
     count = '{Binding DataContext.OptionsList.Count, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}'
-    triggers = ''
+    # the header (the first item): no height, nothing of a row, its text (a title, or "") above the rows
+    triggers = ('                    <DataTrigger Binding="' + index + '" Value="0">\n'
+                '                        <Setter TargetName="Row" Property="Height" Value="0" />\n'
+                '                        <Setter TargetName="Row" Property="Margin" Value="0" />\n'
+                '                        <Setter TargetName="Back" Property="Visibility" Value="Hidden" />\n'
+                '                        <Setter TargetName="Label" Property="Visibility" Value="Collapsed" />\n'
+                '                        <Setter TargetName="Dpad" Property="Visibility" Value="Hidden" />\n'
+                '                        <Setter TargetName="TitleArea" Property="Visibility" Value="Visible" />\n'
+                '                    </DataTrigger>\n'
+                # scrolling, at the top: the "more" row between the header and the entries shows
+                # nothing, and the title goes over it (FH2 ANNA marks the header selected then)
+                '                    <MultiDataTrigger>\n'
+                '                        <MultiDataTrigger.Conditions>\n'
+                '                            <Condition Binding="' + count + '" Value="' + str(SHOWN + 3) + '"/>\n'
+                '                            <Condition Binding="' + index + '" Value="0"/>\n'
+                '                            <Condition Binding="{Binding IsSelected}" Value="True"/>\n'
+                '                        </MultiDataTrigger.Conditions>\n'
+                '                        <Setter TargetName="Title" Property="Canvas.Bottom" Value="' + str(TITLE_UP - pitch(MORE_H)) + '" />\n'
+                '                    </MultiDataTrigger>\n')
     for n in range(1, MAX_ROWS + 1):
-        for i in range(n):
+        for i in range(1, n):
             triggers += ('                    <MultiDataTrigger>\n'
                          '                        <MultiDataTrigger.Conditions>\n'
                          '                            <Condition Binding="' + count + '" Value="' + str(n) + '"/>\n'
@@ -172,6 +200,12 @@ def row_template():
             # "there's more that way" rows (FH2 ANNA gives them these texts): the pause menu's arrow,
             # on a shorter, fainter row
             + arrow('MoreUp', True) + arrow('MoreDown', False) +
+            # the header's title: above the rows, where the entries' text starts, in the highlight's colour
+            '                    <Canvas x:Name="TitleArea" Visibility="Collapsed" Width="' + str(ROW_W + 3 + DPAD) + '" Height="0" VerticalAlignment="Top">\n'
+            '                        <local:FZTextBlock x:Name="Title" Text="{Binding Command}" Style="{StaticResource FH2ANNA_Text}" FontSize="23" '
+            'Color="' + THEME + '" Canvas.Bottom="' + str(TITLE_UP) + '" Canvas.Right="' + str(DPAD + 11) + '" '
+            'Width="{StaticResource A_Double_SpeechOptionWidth}" />\n'
+            '                    </Canvas>\n' +
             # the button that chooses, on a dark square (FH2's d-pad is white: on the yellow it'd vanish)
             '                    <local:FZMaterial x:Name="Dpad" HorizontalAlignment="Right" Width="' + str(DPAD) + '" Height="' + str(DPAD) + '" '
             'Color="' + ON_THEME + '" Visibility="Hidden">\n'

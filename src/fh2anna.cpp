@@ -138,6 +138,7 @@ bool can_grey(const std::string& label) {
     return false;
 }
 
+
 // For the control's XAML (UTF-8: it goes to the game with a BOM, see anna_xaml.cpp).
 std::string xml_escaped(const std::string& s) {
     std::string o;
@@ -195,6 +196,7 @@ struct Menu {
     DWORD close_at  = 0;
     DWORD touched   = 0;
     bool listening  = false;        // woken by "ANNA": the ring lit, no rows shown (voice.cpp)
+    std::string title;              // a list opened from another: the label it was chosen by; "" none
 } g_menu;
 std::atomic<bool> g_open{false};    // for the input update's thread
 uint8_t* g_status = nullptr;        // the HUD's ANNA, for ANNA's own entries
@@ -260,12 +262,16 @@ void set_item_text(uint8_t* item, uint8_t* text) {
     game<NotifyFn>(RVA_ITEM_NOTIFY)(item, game<PropFn>(RVA_COMMAND_PROP)());
 }
 
-// ANNA's list: entries g_first .. g_first + kRows of the list. With as many rows as are there
-// already, their texts change in place; otherwise the list is made again.
+// ANNA's list: its header, then entries g_first .. g_first + kRows of the list. The header is the
+// first item always, which the row template draws as no row at all, its text (the list's title, or
+// "" at the top) above the rows: the rows are where they'd be without it, and a list's title, as
+// the entry it was chosen by reads now, needs nothing of the XAML's for its text. With as many rows
+// as are there already, their texts change in place; otherwise the list is made again.
 void fill_window(uint8_t* status) {
     const int n       = static_cast<int>(g_menu.texts.size());
     const bool more   = n > kRows;   // the marker rows, above and below
     std::vector<uint8_t*> want;
+    want.push_back(text_for(g_menu.title));   // the header
     if (more) want.push_back(text_for(g_first > 0 ? kMoreUp : kMoreNone));
     for (int i = g_first; i < n && i < g_first + kRows; ++i) want.push_back(text_for(g_menu.texts[i]));
     if (more) want.push_back(text_for(g_first + kRows < n ? kMoreDown : kMoreNone));
@@ -277,7 +283,17 @@ void fill_window(uint8_t* status) {
         for (uint8_t* t : want) with_text(RVA_STATUS_ADD, status, t);
         rows = list_items(status);
     }
-    g_menu.items.assign(rows.begin() + (more && !rows.empty() ? 1 : 0), rows.end() - (more && rows.size() > 1 ? 1 : 0));   // the entries' rows
+    // The header's IsSelected (never highlighted otherwise) says the "more" row under it shows
+    // nothing (scrolling, at the top): the row template draws the title over that row then.
+    if (!rows.empty()) {
+        const uint8_t empty_above = more && g_first == 0;
+        if (rows[0][ITEM_SELECTED] != empty_above) {
+            rows[0][ITEM_SELECTED] = empty_above;
+            game<NotifyFn>(RVA_ITEM_NOTIFY)(rows[0], game<PropFn>(RVA_SELECTED_PROP)());
+        }
+    }
+    const std::size_t above = 1 + (more ? 1 : 0), below = more ? 1 : 0;   // the entries' rows
+    g_menu.items.assign(rows.size() >= above + below ? rows.begin() + above : rows.end(), rows.size() >= above + below ? rows.end() - below : rows.end());
 }
 
 // `index` in the whole list.
@@ -311,6 +327,17 @@ int next_enabled(int from, int step) {
 void show_list(uint8_t* status, const std::string& list) {
     g_menu.listening = false;
     g_menu.list      = list;
+    g_menu.title.clear();
+    if (!list.empty()) {   // opened from another list: the label it was chosen by, as it reads now
+        Entry chosen_by;
+        {
+            std::scoped_lock lk{g_entries_mu};
+            for (const Entry& e : g_entries)
+                if (e.key == list) chosen_by = e;
+        }
+        const char* now = chosen_by.label_now ? chosen_by.label_now(chosen_by.user, chosen_by.key.c_str()) : nullptr;
+        g_menu.title    = tr(now && *now ? now : chosen_by.label.c_str());   // a mod's own translation, or ANNA's
+    }
     g_menu.shown.clear();
     g_menu.texts.clear();
     g_menu.off.clear();
@@ -339,6 +366,7 @@ void listen_menu(uint8_t* status) {
     g_open           = true;
     g_menu.listening = true;
     g_menu.list.clear();
+    g_menu.title.clear();
     g_menu.shown.clear();
     g_menu.off.clear();
     g_menu.texts = {kListening};
@@ -639,6 +667,8 @@ constexpr uintptr_t STATE_XINPUT     = 0x50;
 constexpr uint16_t kPadUp = 0x1, kPadDown = 0x2, kPadLeft = 0x4, kPadRight = 0x8, kDpad = 0xF;
 constexpr uint16_t kOpenPad = kPadDown;   // ANNA's button, as FH3's
 constexpr DWORD kTapMs = 250;   // a longer hold is the game's (D-pad down's telemetry wants a hold)
+// While ANNA is open, up or down held moves on by itself: after this long, then every so often.
+constexpr DWORD kRepeatAfterMs = 400, kRepeatEveryMs = 110;
 
 // The game's own bits for each d-pad direction, with XInput's.
 uint64_t game_bits(uint16_t dpad) {
@@ -713,6 +743,20 @@ void read_pad(uint8_t* input) {
     if (g_open.load()) {
         if (press & kPadUp) g_ask |= kAskUp;
         if (press & kPadDown) g_ask |= kAskDown;
+        // held: on by itself (one direction at a time: the one held alone)
+        static uint16_t held_dir = 0;
+        static DWORD next_at     = 0;
+        const uint16_t dir       = now & (kPadUp | kPadDown);
+        const DWORD t            = GetTickCount();
+        if (dir != kPadUp && dir != kPadDown) {
+            held_dir = 0;
+        } else if (dir != held_dir || (press & dir)) {
+            held_dir = dir;
+            next_at  = t + kRepeatAfterMs;
+        } else if (static_cast<LONG>(t - next_at) >= 0) {
+            g_ask |= dir == kPadUp ? kAskUp : kAskDown;
+            next_at = t + kRepeatEveryMs;
+        }
         if (press & kPadRight) g_ask |= kAskChoose;
         if (press & kPadLeft) g_ask |= kAskBack;
         up_at = 0;
@@ -955,7 +999,11 @@ void d_set_mode(uint8_t* status, int mode) {
 // ---- the interface for other mods (include/fh2anna.h) -----------------------------------------
 int api_is_open() { return g_open.load() ? 1 : 0; }
 int api_uses_key(uint32_t) { return 0; }   // ANNA takes no keys: the pad only
-const FH2AnnaApi kApi = {sizeof(FH2AnnaApi), &api_is_open, &api_uses_key, &add_entry};
+std::atomic<bool> g_input_held{false};
+void api_hold_input(int held) {
+    if (g_input_held.exchange(held != 0) != (held != 0)) logf(held ? "a mod holds the driving input: autodrive goes on" : "the driving input's given back");
+}
+const FH2AnnaApi kApi = {sizeof(FH2AnnaApi), &api_is_open, &api_uses_key, &add_entry, &api_hold_input};
 
 DWORD WINAPI start(LPVOID) {
     g_base = static_cast<uint8_t*>(g_api->wait_for_code(0xFFFFFFFFu));
@@ -995,6 +1043,7 @@ DWORD WINAPI start(LPVOID) {
 } // namespace
 
 bool game_driving_input() { return g_driving_input.load(); }
+bool input_held() { return g_input_held.load(); }
 
 std::string disabled_triggers() {
     std::vector<std::string> labels;
@@ -1058,7 +1107,7 @@ FH2MOD_EXPORT int fh2mod_init(const FH2ModApi* api) {
     cinematic_settings();
     hood_trunk_setting();
     add_own_entries();
-    api->publish_interface(g_mod, FH2ANNA_INTERFACE, 4, &kApi);
+    api->publish_interface(g_mod, FH2ANNA_INTERFACE, 5, &kApi);
     if (HANDLE t = CreateThread(nullptr, 0, start, nullptr, 0, nullptr)) CloseHandle(t);
     return 0;
 }
