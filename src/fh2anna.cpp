@@ -718,6 +718,43 @@ bool driving_input(uint8_t* input) {
 
 std::atomic<bool> g_driving_input{false};   // as last read (the input update's thread)
 
+// The game keeps its driving input on behind some screens (the race's start screen, with the car on the grid),
+// where d-pad down is the screen's, not ANNA's. So the pad is ANNA's only while the driving HUD has the focus too:
+// what has it (Keyboard::FocusedElement, 0x1519FD0) is noted each HUD update, on the UI thread. Without a HUD
+// update lately (a full-screen menu), it isn't driving either.
+constexpr uintptr_t RVA_FOCUSED_ELEMENT = 0x1519FD0;
+std::atomic<bool> g_hud_focused{true};
+std::atomic<DWORD> g_hud_seen{0};
+
+// The focused element is the HUD's window (or the telemetry, shown while driving); true if that can't be told.
+bool hud_has_focus() {
+    static const uint8_t expect[] = {0x48, 0x83, 0xEC, 0x28, 0xE8, 0x37, 0x8E, 0xFB, 0xFF, 0x48, 0x8B, 0x88};
+    static const bool ok          = !std::memcmp(g_base + RVA_FOCUSED_ELEMENT, expect, sizeof expect);
+    if (!ok) return true;
+    void** iface = game<void** (*)()>(RVA_FOCUSED_ELEMENT)();
+    if (!iface) return true;
+    auto* obj = reinterpret_cast<uint8_t* (*)(void*)>((*reinterpret_cast<void***>(iface))[0])(iface);
+    if (!obj) return true;
+    auto* vt  = *reinterpret_cast<uint8_t**>(obj);
+    auto* col = *reinterpret_cast<uint8_t**>(vt - 8);   // the RTTI complete object locator
+    if (col < g_base || col >= g_base + 0x3A18000) return true;
+    const char* name = reinterpret_cast<const char*>(g_base + *reinterpret_cast<uint32_t*>(col + 12) + 0x10);
+    return !std::strcmp(name, ".?AVUIWindow@@") || !std::strcmp(name, ".?AVTelemetry@@");
+}
+
+void note_hud_focus() {
+    bool focused = true;
+    __try {
+        focused = hud_has_focus();
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
+    }
+    g_hud_focused = focused;
+    g_hud_seen    = GetTickCount();
+}
+
+// Driving for the pad: the game's driving input on, and the HUD up and focused (not a menu over the car).
+bool pad_is_annas(bool driving) { return driving && g_hud_focused.load() && GetTickCount() - g_hud_seen.load() < 500; }
+
 void read_pad(uint8_t* input) {
     static uint16_t last     = 0;
     static DWORD up_at       = 0;   // ANNA's button went down (closed): hidden till it's a hold
@@ -735,7 +772,7 @@ void read_pad(uint8_t* input) {
     keep &= now;
     if (keep) hide(input, keep);
     g_driving_input = driving_input(input);
-    if (!g_driving_input.load()) {   // a menu has the pad: ANNA leaves it alone, and closes
+    if (!pad_is_annas(g_driving_input.load())) {   // a menu has the pad: ANNA leaves it alone, and closes
         if (g_open.load()) g_ask |= kAskClose;
         up_at = 0;
         return;
@@ -916,6 +953,7 @@ void voice_tick(uint8_t* status) {
 
 void tick(uint8_t* status) {
     pad_hook_outermost();
+    note_hud_focus();
     static uint8_t* seen = nullptr;
     if (status != seen) {   // a new HUD: its list is empty, ANNA asleep
         seen = status;
