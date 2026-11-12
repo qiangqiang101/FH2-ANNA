@@ -198,9 +198,18 @@ std::atomic<void*> g_beams_renderer{nullptr};   // the player's car's, while our
 using UploadFn = void (*)(void* system, void* graphics);
 UploadFn o_upload_beams = nullptr, o_upload_glows = nullptr;
 
+// The reads here run every frame (the uploads, the car's update, the HUD's), so they don't ask
+// readable(): VirtualQuery works out the size of the whole block of memory the address is in, and
+// the game's heap blocks are hundreds of MB, so each call can take milliseconds (about 9 us a MB of
+// memory in use after the address, measured on Windows 11). With ANNA's headlights on, collect()
+// made hundreds of those calls an upload. Instead each read is a call the caller's __try catches if
+// the address is bad: every caller of peek() runs inside one.
+template <class T> __declspec(noinline) T read_raw(const void* p) { return *static_cast<const volatile T*>(p); }
+
 template <class T> bool peek(const void* p, T* out) {
-    if (!p || !readable(p, sizeof(T))) return false;
-    *out = *static_cast<const T*>(p);
+    const auto at = reinterpret_cast<uintptr_t>(p);
+    if (at < 0x10000 || at > 0x7FFFFFFEFFFF - sizeof(T)) return false;
+    *out = read_raw<T>(p);
     return true;
 }
 
@@ -242,11 +251,12 @@ unsigned collect(void* system, bool glow, Threshold out[32]) {
         if (glow) preset &= 0xFFFF;
         uint8_t* definition = record(backing, glow ? 0x6B0 : 0x38, preset, glow ? 0x120 : 0xC0);
         auto* threshold     = definition ? reinterpret_cast<float*>(definition + (glow ? 0x44 : 0x9C)) : nullptr;
-        if (!threshold || !readable(threshold, 8)) continue;
+        float value[2];
+        if (!threshold || !peek(threshold, &value[0]) || !peek(threshold + 1, &value[1])) continue;
         bool seen = false;
         for (unsigned i = 0; i < count; ++i) seen = seen || out[i].at == threshold;
-        if (seen || !std::isfinite(threshold[0]) || !std::isfinite(threshold[1])) continue;
-        out[count++] = {threshold, {threshold[0], threshold[1]}};
+        if (seen || !std::isfinite(value[0]) || !std::isfinite(value[1])) continue;
+        out[count++] = {threshold, {value[0], value[1]}};
     }
     return count;
 }
@@ -279,15 +289,20 @@ void upload(void* system, void* graphics, bool glow) {
 void d_upload_beams(void* system, void* graphics) { upload(system, graphics, false); }
 void d_upload_glows(void* system, void* graphics) { upload(system, graphics, true); }
 
-// The car's renderer, for the uploads, while our headlights are on.
-void beams_for(void* car, bool on) {
-    void *proxy = nullptr, *actual = nullptr, *vt = nullptr;
-    void* now = nullptr;
-    if (on && car && peek(static_cast<uint8_t*>(car) + 0x4D38, &proxy) && peek(static_cast<uint8_t*>(proxy) + 8, &actual) && peek(actual, &vt) &&
-        (vt == g_base + RVA_RENDERER_VT_A || vt == g_base + RVA_RENDERER_VT_B))
-        now = actual;
-    g_beams_renderer = now;
+// The car's renderer, or null.
+void* renderer_of(void* car) {
+    __try {
+        void *proxy = nullptr, *actual = nullptr, *vt = nullptr;
+        if (car && peek(static_cast<uint8_t*>(car) + 0x4D38, &proxy) && peek(static_cast<uint8_t*>(proxy) + 8, &actual) && peek(actual, &vt) &&
+            (vt == g_base + RVA_RENDERER_VT_A || vt == g_base + RVA_RENDERER_VT_B))
+            return actual;
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
+    }
+    return nullptr;
 }
+
+// The car's renderer, for the uploads, while our headlights are on.
+void beams_for(void* car, bool on) { g_beams_renderer = on ? renderer_of(car) : nullptr; }
 
 // The car's update sets them from the game's own choice every frame: ours go in before and after.
 void write_lights(void* car) {
