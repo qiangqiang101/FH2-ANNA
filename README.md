@@ -70,12 +70,13 @@ On **Pause > Settings > MODS**:
 
 | Setting | Default | Does |
 |---|---|---|
+| Cinematic camera button | LB | The button that switches Auto Drive to the cinematic camera and back: LB, RB, A, B, X, Y, View, L3, R3, or None for no cinematic camera. While Auto Drive is on, the game doesn't get that button (Y won't rewind, RB won't change the view) |
 | Hide hood and trunk in ANNA | Off | Leaves the hood and trunk out of Doors, and Open All leaves them shut: for cars with an invisible trunk or a fake engine |
 | Close doors when moving | On | The doors, hood, trunk and storage ANNA opened shut by themselves once the car drives off (the roof stays as it is) |
 | Start Matchmaking in ANNA | On | Shows the Start Matchmaking for list |
 | Voice commands | Off | Listens to the microphone for "ANNA" and a command (see Voice commands) |
 
-They're saved in `fh2-mods\FH2ANNA.ini`. That file also has the Auto Drive cinematic camera's button, `Cinematic=LB` under `[Autodrive]`: LB, RB, A, B, X, Y, View, L3 or R3, or None for no cinematic camera. With FH2 Mouse & Keyboard, its "ANNA: cinematic camera" key (Left Shift) presses that button, whichever it is, and the prompt shows the key.
+They're saved in `fh2-mods\FH2ANNA.ini` (the cinematic camera's button as `Cinematic=LB` under `[Autodrive]`). The cinematic camera starts from the chase cameras. With FH2 Mouse & Keyboard, its "ANNA: cinematic camera" key (Left Shift) presses that button, whichever it is, and the prompt shows the key.
 
 ## With other mods
 

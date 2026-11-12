@@ -421,10 +421,18 @@ int mode_for(int game) {
     return game == kModeMapOnly ? kModeAnna : game;
 }
 
+// The cinematic camera's prompt, one for each button (cinematic_button_index's order): the XAML
+// shows that button's picture for it (tools/port_anna_xaml.py), so a change on the Mods page shows
+// straight away.
+const char* const kHintCinematics[] = {kHintCinematic, "FH2ANNA_HINT_CINEMATIC_RB", "FH2ANNA_HINT_CINEMATIC_A",
+                                       "FH2ANNA_HINT_CINEMATIC_B", "FH2ANNA_HINT_CINEMATIC_X", "FH2ANNA_HINT_CINEMATIC_Y",
+                                       "FH2ANNA_HINT_CINEMATIC_View", "FH2ANNA_HINT_CINEMATIC_L3", "FH2ANNA_HINT_CINEMATIC_R3"};
+
 const char* awake_row() {
     const DWORD t = GetTickCount() - g_driving_since;
-    if (!cinematic_button()) return t < kHintMs ? kHintAnna : kAwake;   // no cinematic camera
-    return t < kHintMs ? kHintCinematic : t < 2 * kHintMs ? kHintAnna : kAwake;
+    const int button = cinematic_button_index();
+    if (button < 0 || button >= static_cast<int>(std::size(kHintCinematics))) return t < kHintMs ? kHintAnna : kAwake;   // no cinematic camera
+    return t < kHintMs ? kHintCinematics[button] : t < 2 * kHintMs ? kHintAnna : kAwake;
 }
 
 // Awake, with `row`: from asleep it wakes (ShowFull: its sound, its ring); from open, or another
@@ -784,6 +792,7 @@ bool driving_input(uint8_t* input) {
 }
 
 std::atomic<bool> g_driving_input{false};   // as last read (the input update's thread)
+std::atomic<bool> g_cinematic_held{false};  // ditto
 
 // The game keeps its driving input on behind some screens (the race's start screen, with the car on the grid),
 // where d-pad down is the screen's, not ANNA's. So the pad is ANNA's only while the driving HUD has the focus too:
@@ -839,6 +848,11 @@ void read_pad(uint8_t* input) {
     keep &= now;
     if (keep) hide(input, keep);
     g_driving_input = driving_input(input);
+    // The cinematic camera's button, while ANNA drives: autodrive's (cinematic_held), not the game's,
+    // which has a use for most (Y rewinds, RB changes the camera). Its own menus keep theirs.
+    const uint16_t cinematic = cinematic_button();
+    g_cinematic_held = cinematic && (*reinterpret_cast<uint16_t*>(input + INPUT_STATE + STATE_XINPUT) & cinematic);
+    if (cinematic && autodriving() && (g_driving_input.load() || cinematic_on())) hide(input, cinematic);
     if (!pad_is_annas(g_driving_input.load())) {   // a menu has the pad: ANNA leaves it alone, and closes
         if (g_open.load()) g_ask |= kAskClose;
         up_at = 0;
@@ -1164,6 +1178,7 @@ DWORD WINAPI start(LPVOID) {
 
 bool game_driving_input() { return g_driving_input.load(); }
 bool input_held() { return g_input_held.load(); }
+bool cinematic_held() { return g_cinematic_held.load(); }
 
 std::string disabled_triggers() {
     std::vector<std::string> labels;
@@ -1203,11 +1218,6 @@ std::string disabled_triggers() {
 }
 
 void hint_texts(std::string& xaml) {
-    // The cinematic camera's button's picture (FH2ANNA_Icon_Cinematic, LB's in the XAML): a keyboard
-    // mod (FH2Mouse) shows its key in it instead.
-    const std::string lb = "Controller_LB.png";
-    if (const std::size_t p = xaml.find(lb); p != std::string::npos && cinematic_button())
-        xaml.replace(p, lb.size(), std::string("Controller_") + cinematic_button_name() + ".png");
     static const struct {
         const char* name;
         const char* english;   // {} where the button's picture goes

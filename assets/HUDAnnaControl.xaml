@@ -22,6 +22,15 @@
             <ImageSource x:Key="FH2ANNA_Icon_Open">/ForzaUI;component/Textures/Data_Bound/ControllerIcons/Controller_DPadDown.png</ImageSource>
             <ImageSource x:Key="FH2ANNA_Icon_Choose">/ForzaUI;component/Textures/Data_Bound/ControllerIcons/Controller_DPadRight.png</ImageSource>
             <ImageSource x:Key="FH2ANNA_Icon_Cinematic">/ForzaUI;component/Textures/Data_Bound/ControllerIcons/Controller_LB.png</ImageSource>
+            <ImageSource x:Key="FH2ANNA_Icon_Cinematic_RB">/ForzaUI;component/Textures/Data_Bound/ControllerIcons/Controller_RB.png</ImageSource>
+            <ImageSource x:Key="FH2ANNA_Icon_Cinematic_A">/ForzaUI;component/Textures/Data_Bound/ControllerIcons/Controller_A.png</ImageSource>
+            <ImageSource x:Key="FH2ANNA_Icon_Cinematic_B">/ForzaUI;component/Textures/Data_Bound/ControllerIcons/Controller_B.png</ImageSource>
+            <ImageSource x:Key="FH2ANNA_Icon_Cinematic_X">/ForzaUI;component/Textures/Data_Bound/ControllerIcons/Controller_X.png</ImageSource>
+            <ImageSource x:Key="FH2ANNA_Icon_Cinematic_Y">/ForzaUI;component/Textures/Data_Bound/ControllerIcons/Controller_Y.png</ImageSource>
+            <ImageSource x:Key="FH2ANNA_Icon_Cinematic_View">/ForzaUI;component/Textures/Data_Bound/ControllerIcons/Controller_View.png</ImageSource>
+            <ImageSource x:Key="FH2ANNA_Icon_Cinematic_L3">/ForzaUI;component/Textures/Data_Bound/ControllerIcons/Controller_L3.png</ImageSource>
+            <ImageSource x:Key="FH2ANNA_Icon_Cinematic_R3">/ForzaUI;component/Textures/Data_Bound/ControllerIcons/Controller_R3.png</ImageSource>
+
             <Style x:Key="FH2ANNA_Text" TargetType="{x:Type local:FZTextBlock}" BasedOn="{StaticResource A_Style_FZTextBlock_HudMedium}">
                 <Setter Property="FontSize" Value="26" />
             </Style>
@@ -202,14 +211,14 @@
                         <Grid x:Name="HintCinematic" Visibility="Collapsed" Canvas.Left="-171" Canvas.Top="84" Width="1600" Height="60">
                           <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                             <local:FZTextBlock Text="FH2ANNA_TEXT_CINEMATIC_BEFORE" Style="{StaticResource FH2ANNA_Text}" FontSize="40" Color="{StaticResource A_Color_HUD_Text_NoBackground}" VerticalAlignment="Center" />
-                            <local:FZMaterial ImageSource="{StaticResource FH2ANNA_Icon_Cinematic}" Width="40" Height="40" Margin="10,0,10,0" Color="White" VerticalAlignment="Center" />
+                            <local:FZMaterial x:Name="HintCinematicIcon" ImageSource="{StaticResource FH2ANNA_Icon_Cinematic}" Width="40" Height="40" Margin="10,0,10,0" Color="White" VerticalAlignment="Center" />
                             <local:FZTextBlock Text="FH2ANNA_TEXT_CINEMATIC_AFTER" Style="{StaticResource FH2ANNA_Text}" FontSize="40" Color="{StaticResource A_Color_HUD_Text_NoBackground}" VerticalAlignment="Center" />
                           </StackPanel>
                         </Grid>
                         <Grid x:Name="HintAnna" Visibility="Collapsed" Canvas.Left="-171" Canvas.Top="84" Width="1600" Height="60">
                           <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                             <local:FZTextBlock Text="FH2ANNA_TEXT_ANNA_BEFORE" Style="{StaticResource FH2ANNA_Text}" FontSize="40" Color="{StaticResource A_Color_HUD_Text_NoBackground}" VerticalAlignment="Center" />
-                            <local:FZMaterial ImageSource="{StaticResource FH2ANNA_Icon_Open}" Width="40" Height="40" Margin="10,0,10,0" Color="White" VerticalAlignment="Center" />
+                            <local:FZMaterial x:Name="HintAnnaIcon" ImageSource="{StaticResource FH2ANNA_Icon_Open}" Width="40" Height="40" Margin="10,0,10,0" Color="White" VerticalAlignment="Center" />
                             <local:FZTextBlock Text="FH2ANNA_TEXT_ANNA_AFTER" Style="{StaticResource FH2ANNA_Text}" FontSize="40" Color="{StaticResource A_Color_HUD_Text_NoBackground}" VerticalAlignment="Center" />
                           </StackPanel>
                         </Grid>
@@ -278,6 +287,78 @@
                         <Setter TargetName="Dpad" Property="Visibility" Value="Hidden" />
                         <Setter TargetName="HintAnna" Property="Visibility" Value="Visible" />
                         <Setter TargetName="AutoDriveOn" Property="Visibility" Value="Visible" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding Command}" Value="FH2ANNA_HINT_CINEMATIC_RB">
+                        <Setter TargetName="Row" Property="Height" Value="0" />
+                        <Setter TargetName="Back" Property="Visibility" Value="Hidden" />
+                        <Setter TargetName="Label" Property="Visibility" Value="Collapsed" />
+                        <Setter TargetName="Dpad" Property="Visibility" Value="Hidden" />
+                        <Setter TargetName="HintCinematic" Property="Visibility" Value="Visible" />
+                        <Setter TargetName="AutoDriveOn" Property="Visibility" Value="Visible" />
+                        <Setter TargetName="HintCinematicIcon" Property="ImageSource" Value="{StaticResource FH2ANNA_Icon_Cinematic_RB}" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding Command}" Value="FH2ANNA_HINT_CINEMATIC_A">
+                        <Setter TargetName="Row" Property="Height" Value="0" />
+                        <Setter TargetName="Back" Property="Visibility" Value="Hidden" />
+                        <Setter TargetName="Label" Property="Visibility" Value="Collapsed" />
+                        <Setter TargetName="Dpad" Property="Visibility" Value="Hidden" />
+                        <Setter TargetName="HintCinematic" Property="Visibility" Value="Visible" />
+                        <Setter TargetName="AutoDriveOn" Property="Visibility" Value="Visible" />
+                        <Setter TargetName="HintCinematicIcon" Property="ImageSource" Value="{StaticResource FH2ANNA_Icon_Cinematic_A}" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding Command}" Value="FH2ANNA_HINT_CINEMATIC_B">
+                        <Setter TargetName="Row" Property="Height" Value="0" />
+                        <Setter TargetName="Back" Property="Visibility" Value="Hidden" />
+                        <Setter TargetName="Label" Property="Visibility" Value="Collapsed" />
+                        <Setter TargetName="Dpad" Property="Visibility" Value="Hidden" />
+                        <Setter TargetName="HintCinematic" Property="Visibility" Value="Visible" />
+                        <Setter TargetName="AutoDriveOn" Property="Visibility" Value="Visible" />
+                        <Setter TargetName="HintCinematicIcon" Property="ImageSource" Value="{StaticResource FH2ANNA_Icon_Cinematic_B}" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding Command}" Value="FH2ANNA_HINT_CINEMATIC_X">
+                        <Setter TargetName="Row" Property="Height" Value="0" />
+                        <Setter TargetName="Back" Property="Visibility" Value="Hidden" />
+                        <Setter TargetName="Label" Property="Visibility" Value="Collapsed" />
+                        <Setter TargetName="Dpad" Property="Visibility" Value="Hidden" />
+                        <Setter TargetName="HintCinematic" Property="Visibility" Value="Visible" />
+                        <Setter TargetName="AutoDriveOn" Property="Visibility" Value="Visible" />
+                        <Setter TargetName="HintCinematicIcon" Property="ImageSource" Value="{StaticResource FH2ANNA_Icon_Cinematic_X}" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding Command}" Value="FH2ANNA_HINT_CINEMATIC_Y">
+                        <Setter TargetName="Row" Property="Height" Value="0" />
+                        <Setter TargetName="Back" Property="Visibility" Value="Hidden" />
+                        <Setter TargetName="Label" Property="Visibility" Value="Collapsed" />
+                        <Setter TargetName="Dpad" Property="Visibility" Value="Hidden" />
+                        <Setter TargetName="HintCinematic" Property="Visibility" Value="Visible" />
+                        <Setter TargetName="AutoDriveOn" Property="Visibility" Value="Visible" />
+                        <Setter TargetName="HintCinematicIcon" Property="ImageSource" Value="{StaticResource FH2ANNA_Icon_Cinematic_Y}" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding Command}" Value="FH2ANNA_HINT_CINEMATIC_View">
+                        <Setter TargetName="Row" Property="Height" Value="0" />
+                        <Setter TargetName="Back" Property="Visibility" Value="Hidden" />
+                        <Setter TargetName="Label" Property="Visibility" Value="Collapsed" />
+                        <Setter TargetName="Dpad" Property="Visibility" Value="Hidden" />
+                        <Setter TargetName="HintCinematic" Property="Visibility" Value="Visible" />
+                        <Setter TargetName="AutoDriveOn" Property="Visibility" Value="Visible" />
+                        <Setter TargetName="HintCinematicIcon" Property="ImageSource" Value="{StaticResource FH2ANNA_Icon_Cinematic_View}" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding Command}" Value="FH2ANNA_HINT_CINEMATIC_L3">
+                        <Setter TargetName="Row" Property="Height" Value="0" />
+                        <Setter TargetName="Back" Property="Visibility" Value="Hidden" />
+                        <Setter TargetName="Label" Property="Visibility" Value="Collapsed" />
+                        <Setter TargetName="Dpad" Property="Visibility" Value="Hidden" />
+                        <Setter TargetName="HintCinematic" Property="Visibility" Value="Visible" />
+                        <Setter TargetName="AutoDriveOn" Property="Visibility" Value="Visible" />
+                        <Setter TargetName="HintCinematicIcon" Property="ImageSource" Value="{StaticResource FH2ANNA_Icon_Cinematic_L3}" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding Command}" Value="FH2ANNA_HINT_CINEMATIC_R3">
+                        <Setter TargetName="Row" Property="Height" Value="0" />
+                        <Setter TargetName="Back" Property="Visibility" Value="Hidden" />
+                        <Setter TargetName="Label" Property="Visibility" Value="Collapsed" />
+                        <Setter TargetName="Dpad" Property="Visibility" Value="Hidden" />
+                        <Setter TargetName="HintCinematic" Property="Visibility" Value="Visible" />
+                        <Setter TargetName="AutoDriveOn" Property="Visibility" Value="Visible" />
+                        <Setter TargetName="HintCinematicIcon" Property="ImageSource" Value="{StaticResource FH2ANNA_Icon_Cinematic_R3}" />
                     </DataTrigger>
                     <DataTrigger Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="0">
                         <Setter TargetName="Row" Property="Height" Value="0" />

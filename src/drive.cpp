@@ -97,16 +97,9 @@ float analog(int control) {
 }
 float steering() { return analog(2); }
 
-// The cinematic camera's button: the pad's (XInput's wButtons as read, the input's state +0x50,
-// where FH2 Mouse & Keyboard holds it for its key).
-bool cinematic_button_down() {
-    const uint16_t bit = cinematic_button();
-    if (!bit) return false;
-    uint8_t* all   = *reinterpret_cast<uint8_t**>(g_base + RVA_INPUTS);
-    uint8_t* input = all ? *reinterpret_cast<uint8_t**>(all + INPUTS_CURRENT) : nullptr;
-    const bool pad = input && (*reinterpret_cast<uint16_t*>(input + 0x70 + 0x50) & bit);
-    return pad;
-}
+// The cinematic camera's button: the pad's (XInput's wButtons as read, where FH2 Mouse & Keyboard
+// holds it for its key), as ANNA's pad hook saw it before hiding it from the game.
+bool cinematic_button_down() { return cinematic_held(); }
 
 // ---- signals --------------------------------------------------------------------------------
 std::atomic<int> g_signal{0};

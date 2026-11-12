@@ -26,6 +26,8 @@
 
 #include <atomic>
 #include <cmath>
+#include <cstring>
+#include <iterator>
 #include <string>
 #include <vector>
 
@@ -307,30 +309,72 @@ struct Button {
 };
 const Button kButtons[] = {{"LB", 0x0100}, {"RB", 0x0200}, {"A", 0x1000}, {"B", 0x2000}, {"X", 0x4000},
                            {"Y", 0x8000}, {"View", 0x0020}, {"L3", 0x0040}, {"R3", 0x0080}};
-Button g_button = kButtons[0];
+// Which: an index into kButtons, or kNone. Read from the game's threads, set from the ini and the
+// Mods page's row.
+constexpr int kNone   = static_cast<int>(std::size(kButtons));
+std::atomic<int> g_button{0};
+std::wstring g_cinematic_ini;
+
+void set_button(int i) {
+    g_button = i;
+    WritePrivateProfileStringW(L"Autodrive", L"Cinematic", i == kNone ? L"None" : std::wstring(kButtons[i].name, kButtons[i].name + std::strlen(kButtons[i].name)).c_str(),
+                               g_cinematic_ini.c_str());
+}
 
 } // namespace
 
 void cinematic_settings() {
-    const std::wstring ini = std::wstring(g_api->azimuth_dir) + L"\\fh2-mods\\FH2ANNA.ini";
-    wchar_t value[32]      = {};
-    GetPrivateProfileStringW(L"Autodrive", L"Cinematic", L"", value, 32, ini.c_str());
+    g_cinematic_ini   = std::wstring(g_api->azimuth_dir) + L"\\fh2-mods\\FH2ANNA.ini";
+    wchar_t value[32] = {};
+    GetPrivateProfileStringW(L"Autodrive", L"Cinematic", L"", value, 32, g_cinematic_ini.c_str());
     std::string v;
     for (const wchar_t* c = value; *c; ++c) v += *c < 0x80 ? static_cast<char>(*c) : '?';
-    bool known = false;
-    if (!_stricmp(v.c_str(), "None")) g_button = {"None", 0}, known = true;
-    for (const Button& b : kButtons)
-        if (!_stricmp(v.c_str(), b.name)) g_button = b, known = true;
-    if (!known) {   // missing, the old 1 / 0, or not a button: LB
+    int found = -1;
+    if (!_stricmp(v.c_str(), "None")) found = kNone;
+    for (int i = 0; i < kNone; ++i)
+        if (!_stricmp(v.c_str(), kButtons[i].name)) found = i;
+    if (found < 0) {   // missing, the old 1 / 0, or not a button: LB
         if (!v.empty() && v != "0" && v != "1") logf("FH2ANNA.ini: Cinematic=%s isn't a button (LB, RB, A, B, X, Y, View, L3, R3, None): LB", v.c_str());
-        g_button = kButtons[0];
-        WritePrivateProfileStringW(L"Autodrive", L"Cinematic", L"LB", ini.c_str());
+        set_button(0);
+    } else {
+        g_button = found;
     }
-    logf("autodrive's cinematic camera: %s", g_button.bit ? g_button.name : "none");
+    logf("autodrive's cinematic camera: %s", cinematic_button() ? cinematic_button_name() : "none");
+    // Its row on the Mods page: the buttons by name, as the ini has them (choices: API 9; on an
+    // older platform it'd be an On/Off row, so there it's the ini's alone).
+    if (g_api->api_version < 9) return;
+    static const char* choices[kNone + 1];
+    for (int i = 0; i < kNone; ++i) choices[i] = kButtons[i].name;
+    choices[kNone] = "None";
+    FH2Setting s{};
+    s.size         = sizeof s;
+    s.key          = "CinematicButton";
+    s.label        = tr("Cinematic camera button");
+    s.description  = tr("While Auto Drive is on, this button switches to slow cinematic shots and back. None: no cinematic camera.");
+    s.kind         = FH2_SETTING_CHOICE;
+    s.choices      = choices;
+    s.choice_count = kNone + 1;
+    s.value        = g_button.load();
+    s.on_change    = [](void*, const char*, int value) {
+        if (value < 0 || value > kNone) return;
+        set_button(value);
+        logf("autodrive's cinematic camera: %s", cinematic_button() ? cinematic_button_name() : "none");
+    };
+    g_api->add_setting(g_mod, &s);
 }
 
-uint16_t cinematic_button() { return g_button.bit; }
-const char* cinematic_button_name() { return g_button.name; }
+uint16_t cinematic_button() {
+    const int i = g_button.load();
+    return i < kNone ? kButtons[i].bit : 0;
+}
+const char* cinematic_button_name() {
+    const int i = g_button.load();
+    return i < kNone ? kButtons[i].name : "None";
+}
+int cinematic_button_index() {
+    const int i = g_button.load();
+    return i < kNone ? i : -1;
+}
 
 bool hook_cinematic() {
     // The relative cameras' FOV, in their vtable's slot (as long as it's still the game's own).

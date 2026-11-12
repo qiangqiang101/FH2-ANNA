@@ -9,9 +9,10 @@ namespace fh2anna {
 
 bool hook_cinematic();              // the replay cameras' FOV (from start)
 
-void cinematic_settings();          // its button, from the ini (from fh2mod_init)
+void cinematic_settings();          // its button, from the ini, and its Mods page row (from fh2mod_init)
 uint16_t cinematic_button();        // its XInput bit; 0: None, no cinematic camera
 const char* cinematic_button_name();   // "LB", "RB", "A"... (FH2's ControllerIcons/Controller_<name>.png)
+int cinematic_button_index();       // 0 LB, 1 RB, 2 A, 3 B, 4 X, 5 Y, 6 View, 7 L3, 8 R3; -1 None
 
 bool cinematic_start();             // the shots, the HUD hidden, a flash: false if the camera can't
 void cinematic_tick();              // the next shot when one ends

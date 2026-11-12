@@ -39,6 +39,8 @@ RESOURCES = '''
             <ImageSource x:Key="FH2ANNA_Icon_Open">/ForzaUI;component/Textures/Data_Bound/ControllerIcons/Controller_DPadDown.png</ImageSource>
             <ImageSource x:Key="FH2ANNA_Icon_Choose">/ForzaUI;component/Textures/Data_Bound/ControllerIcons/Controller_DPadRight.png</ImageSource>
             <ImageSource x:Key="FH2ANNA_Icon_Cinematic">/ForzaUI;component/Textures/Data_Bound/ControllerIcons/Controller_LB.png</ImageSource>
+''' + ''.join('            <ImageSource x:Key="FH2ANNA_Icon_Cinematic_%s">/ForzaUI;component/Textures/Data_Bound/ControllerIcons/Controller_%s.png</ImageSource>\n' % (b, b)
+              for b in ['RB', 'A', 'B', 'X', 'Y', 'View', 'L3', 'R3']) + '''
             <Style x:Key="FH2ANNA_Text" TargetType="{x:Type local:FZTextBlock}" BasedOn="{StaticResource A_Style_FZTextBlock_HudMedium}">
                 <Setter Property="FontSize" Value="26" />
             </Style>
@@ -179,9 +181,13 @@ HINTS    = [('FH2ANNA_HINT_CINEMATIC', 'HintCinematic', 'FH2ANNA_Icon_Cinematic'
             ('FH2ANNA_HINT_ANNA', 'HintAnna', 'FH2ANNA_Icon_Open', 'ANNA')]
 
 
-def awake(text, panel=None):
-    """ANNA awake for autodrive: its row drawn as nothing (or as the prompt `panel`), and the
-    "Auto Drive On" tag on the minimap."""
+CINEMATIC_BUTTONS = ['RB', 'A', 'B', 'X', 'Y', 'View', 'L3', 'R3']   # besides LB (FH2ANNA_Icon_Cinematic):
+# the cinematic camera's button as set (src/cinematic.cpp); its prompt's row is FH2ANNA_HINT_CINEMATIC_<it>
+
+
+def awake(text, panel=None, icon=None):
+    """ANNA awake for autodrive: its row drawn as nothing (or as the prompt `panel`, its button's
+    picture `icon` if not its own), and the "Auto Drive On" tag on the minimap."""
     t = ('                    <DataTrigger Binding="{Binding Command}" Value="' + text + '">\n'
          '                        <Setter TargetName="Row" Property="Height" Value="0" />\n'
          '                        <Setter TargetName="Back" Property="Visibility" Value="Hidden" />\n'
@@ -190,6 +196,8 @@ def awake(text, panel=None):
     for name in [panel, 'AutoDriveOn']:
         if name:
             t += '                        <Setter TargetName="' + name + '" Property="Visibility" Value="Visible" />\n'
+    if icon:
+        t += '                        <Setter TargetName="' + panel + 'Icon" Property="ImageSource" Value="{StaticResource ' + icon + '}" />\n'
     return t + '                    </DataTrigger>\n'
 
 
@@ -230,7 +238,7 @@ def hint_panels():
               'Width="%d" Height="%d">\n' % (left, top, HINT_W, HINT_H) +
               '                          <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">\n' +
               text('FH2ANNA_TEXT_' + name + '_BEFORE') +
-              '                            <local:FZMaterial ImageSource="{StaticResource ' + icon + '}" Width="' + str(HINT_PT) + '" '
+              '                            <local:FZMaterial x:Name="' + panel + 'Icon" ImageSource="{StaticResource ' + icon + '}" Width="' + str(HINT_PT) + '" '
               'Height="' + str(HINT_PT) + '" Margin="10,0,10,0" Color="White" VerticalAlignment="Center" />\n' +
               text('FH2ANNA_TEXT_' + name + '_AFTER') +
               '                          </StackPanel>\n'
@@ -315,7 +323,8 @@ def row_template():
             # it loads this (src/fh2anna.cpp, disabled_triggers), after the highlight's, so they win
             '                    <!--FH2ANNA_OFF-->\n' + more('FH2ANNA_MORE_UP', 'MoreUp') +
             more('FH2ANNA_MORE_DOWN', 'MoreDown') + more('FH2ANNA_MORE_NONE', None) + LISTENING + awake('FH2ANNA_AWAKE') +
-            ''.join(awake(text, panel) for text, panel, _, _ in HINTS) + triggers +
+            ''.join(awake(text, panel) for text, panel, _, _ in HINTS) +
+            ''.join(awake('FH2ANNA_HINT_CINEMATIC_' + b, 'HintCinematic', 'FH2ANNA_Icon_Cinematic_' + b) for b in CINEMATIC_BUTTONS) + triggers +
             '                </DataTemplate.Triggers>\n'
             '            </DataTemplate>')
 
