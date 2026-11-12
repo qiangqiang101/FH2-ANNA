@@ -9,6 +9,7 @@
     mc:Ignorable="d"
     x:Class="ForzaUI.HUDAnnaControl"
     x:Name="UserControl"
+    Tag="{Binding AnnaDisplayMode}"
     >
 
     <UserControl.Resources>
@@ -20,6 +21,7 @@
                  here by name and shows its keys in them -->
             <ImageSource x:Key="FH2ANNA_Icon_Open">/ForzaUI;component/Textures/Data_Bound/ControllerIcons/Controller_DPadDown.png</ImageSource>
             <ImageSource x:Key="FH2ANNA_Icon_Choose">/ForzaUI;component/Textures/Data_Bound/ControllerIcons/Controller_DPadRight.png</ImageSource>
+            <ImageSource x:Key="FH2ANNA_Icon_Cinematic">/ForzaUI;component/Textures/Data_Bound/ControllerIcons/Controller_LB.png</ImageSource>
             <Style x:Key="FH2ANNA_Text" TargetType="{x:Type local:FZTextBlock}" BasedOn="{StaticResource A_Style_FZTextBlock_HudMedium}">
                 <Setter Property="FontSize" Value="26" />
             </Style>
@@ -196,6 +198,32 @@
                     <local:FZMaterial x:Name="Dpad" HorizontalAlignment="Right" Width="34" Height="34" Color="#FF1A1A1A" Visibility="Hidden">
                         <local:FZMaterial ImageSource="{StaticResource FH2ANNA_Icon_Choose}" Width="28" Height="28" Color="White" />
                     </local:FZMaterial>
+                    <Canvas Width="0" Height="0" HorizontalAlignment="Left" VerticalAlignment="Top">
+                        <Grid x:Name="HintCinematic" Visibility="Collapsed" Canvas.Left="-171" Canvas.Top="84" Width="1600" Height="60">
+                          <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <local:FZTextBlock Text="FH2ANNA_TEXT_CINEMATIC_BEFORE" Style="{StaticResource FH2ANNA_Text}" FontSize="40" Color="{StaticResource A_Color_HUD_Text_NoBackground}" VerticalAlignment="Center" />
+                            <local:FZMaterial ImageSource="{StaticResource FH2ANNA_Icon_Cinematic}" Width="40" Height="40" Margin="10,0,10,0" Color="White" VerticalAlignment="Center" />
+                            <local:FZTextBlock Text="FH2ANNA_TEXT_CINEMATIC_AFTER" Style="{StaticResource FH2ANNA_Text}" FontSize="40" Color="{StaticResource A_Color_HUD_Text_NoBackground}" VerticalAlignment="Center" />
+                          </StackPanel>
+                        </Grid>
+                        <Grid x:Name="HintAnna" Visibility="Collapsed" Canvas.Left="-171" Canvas.Top="84" Width="1600" Height="60">
+                          <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <local:FZTextBlock Text="FH2ANNA_TEXT_ANNA_BEFORE" Style="{StaticResource FH2ANNA_Text}" FontSize="40" Color="{StaticResource A_Color_HUD_Text_NoBackground}" VerticalAlignment="Center" />
+                            <local:FZMaterial ImageSource="{StaticResource FH2ANNA_Icon_Open}" Width="40" Height="40" Margin="10,0,10,0" Color="White" VerticalAlignment="Center" />
+                            <local:FZTextBlock Text="FH2ANNA_TEXT_ANNA_AFTER" Style="{StaticResource FH2ANNA_Text}" FontSize="40" Color="{StaticResource A_Color_HUD_Text_NoBackground}" VerticalAlignment="Center" />
+                          </StackPanel>
+                        </Grid>
+                    </Canvas>
+                    <Canvas Width="0" Height="0" HorizontalAlignment="Left" VerticalAlignment="Top">
+                        <Grid x:Name="AutoDriveOn" Visibility="Collapsed" Canvas.Left="-273" Canvas.Top="67" Width="400" Height="34">
+                          <Border Background="#33383838" CornerRadius="9" Padding="8,0,8,0" HorizontalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                              <local:FZTextBlock Text="FH2ANNA_TEXT_AUTODRIVE" Style="{StaticResource FH2ANNA_Text}" FontSize="25" Color="{StaticResource A_Color_HUD_Text_NoBackground}" Margin="4,-1,4,1" VerticalAlignment="Center" />
+                              <local:FZTextBlock Text="FH2ANNA_TEXT_ON" Style="{StaticResource FH2ANNA_Text}" FontSize="25" Color="{StaticResource A_Color_Minimap_EdgeActive}" Margin="4,-1,4,1" VerticalAlignment="Center" />
+                            </StackPanel>
+                          </Border>
+                        </Grid>
+                    </Canvas>
                 </Grid>
                 <DataTemplate.Triggers>
                     <DataTrigger Binding="{Binding IsSelected}" Value="True">
@@ -227,6 +255,29 @@
                         <Setter TargetName="Back" Property="Visibility" Value="Hidden" />
                         <Setter TargetName="Label" Property="Visibility" Value="Collapsed" />
                         <Setter TargetName="Dpad" Property="Visibility" Value="Hidden" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding Command}" Value="FH2ANNA_AWAKE">
+                        <Setter TargetName="Row" Property="Height" Value="0" />
+                        <Setter TargetName="Back" Property="Visibility" Value="Hidden" />
+                        <Setter TargetName="Label" Property="Visibility" Value="Collapsed" />
+                        <Setter TargetName="Dpad" Property="Visibility" Value="Hidden" />
+                        <Setter TargetName="AutoDriveOn" Property="Visibility" Value="Visible" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding Command}" Value="FH2ANNA_HINT_CINEMATIC">
+                        <Setter TargetName="Row" Property="Height" Value="0" />
+                        <Setter TargetName="Back" Property="Visibility" Value="Hidden" />
+                        <Setter TargetName="Label" Property="Visibility" Value="Collapsed" />
+                        <Setter TargetName="Dpad" Property="Visibility" Value="Hidden" />
+                        <Setter TargetName="HintCinematic" Property="Visibility" Value="Visible" />
+                        <Setter TargetName="AutoDriveOn" Property="Visibility" Value="Visible" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding Command}" Value="FH2ANNA_HINT_ANNA">
+                        <Setter TargetName="Row" Property="Height" Value="0" />
+                        <Setter TargetName="Back" Property="Visibility" Value="Hidden" />
+                        <Setter TargetName="Label" Property="Visibility" Value="Collapsed" />
+                        <Setter TargetName="Dpad" Property="Visibility" Value="Hidden" />
+                        <Setter TargetName="HintAnna" Property="Visibility" Value="Visible" />
+                        <Setter TargetName="AutoDriveOn" Property="Visibility" Value="Visible" />
                     </DataTrigger>
                     <DataTrigger Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="0">
                         <Setter TargetName="Row" Property="Height" Value="0" />
@@ -967,6 +1018,9 @@
             <Style x:Key="A_Style_FrameworkElement_HideIfANNAOnly" TargetType="{x:Type FrameworkElement}">
                 <Setter Property="Visibility" Value="Visible"/>
                 <Style.Triggers>
+                    <DataTrigger Binding="{Binding AnnaDisplayMode}" Value="4">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                    </DataTrigger>
                     <DataTrigger Binding="{Binding AnnaDisplayMode}" Value="1">
                         <Setter Property="Visibility" Value="Collapsed" />
                     </DataTrigger>
@@ -976,6 +1030,9 @@
             <Style x:Key="A_Style_FrameworkElement_HideIfMapOnly" TargetType="{x:Type FrameworkElement}">
                 <Setter Property="Visibility" Value="Visible"/>
                 <Style.Triggers>
+                    <DataTrigger Binding="{Binding AnnaDisplayMode}" Value="4">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                    </DataTrigger>
                     <DataTrigger Binding="{Binding AnnaDisplayMode}" Value="2">
                         <Setter Property="Visibility" Value="Collapsed" />
                     </DataTrigger>

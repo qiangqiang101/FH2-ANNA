@@ -10,7 +10,9 @@
 // are written before every update of the player's car. Left / right turn off once the steering
 // has turned (|steer| >= 0.15) and come back (<= 0.05), as a stalk does; hazards stay on.
 //
-// Autodrive's cinematic camera: cinematic.cpp, from here (3 s in, as Extra Options' FH3 branch).
+// Autodrive's cinematic camera: cinematic.cpp, from here: its button (LB, as FH3's, unless the ini
+// says another) turns it on and off while ANNA drives. A keyboard mod's key holds that button
+// (fh2anna.h's cinematic_button says which).
 //
 // Autodrive: the game's AI driver drives the sat-nav's route. 0xF79F10(car, ai) hands the car
 // to the AI (its driver mode, car +0x4D30, 1 the player's, 0 the AI's) and back; the route's
@@ -31,6 +33,7 @@
 #include "drive.h"
 #include "car.h"
 #include "cinematic.h"
+#include "NitroSystemControl.h"
 
 #include <atomic>
 #include <cmath>
@@ -94,6 +97,17 @@ float analog(int control) {
 }
 float steering() { return analog(2); }
 
+// The cinematic camera's button: the pad's (XInput's wButtons as read, the input's state +0x50,
+// where FH2 Mouse & Keyboard holds it for its key).
+bool cinematic_button_down() {
+    const uint16_t bit = cinematic_button();
+    if (!bit) return false;
+    uint8_t* all   = *reinterpret_cast<uint8_t**>(g_base + RVA_INPUTS);
+    uint8_t* input = all ? *reinterpret_cast<uint8_t**>(all + INPUTS_CURRENT) : nullptr;
+    const bool pad = input && (*reinterpret_cast<uint16_t*>(input + 0x70 + 0x50) & bit);
+    return pad;
+}
+
 // ---- signals --------------------------------------------------------------------------------
 std::atomic<int> g_signal{0};
 void* g_signal_car = nullptr;        // whose they are (the car update's thread)
@@ -154,9 +168,8 @@ struct Drive {
     uint8_t* car     = nullptr;
     uint8_t* tracker = nullptr;
     void* route      = nullptr;
-    float elapsed    = 0;       // seconds of it
-    bool cinematic_tried = false;
     bool event       = false;   // the game's route (the car's update), not the sat-nav's
+    bool button_was  = true;    // the cinematic camera's button as last seen (held as it starts: let go first)
 } g_drive;                           // the sat-nav's and the player's car's updates (one thread)
 std::atomic<bool> g_driving{false};
 std::atomic<void*> g_event_car{nullptr};   // the car with a route the game set, as last seen
@@ -280,7 +293,7 @@ void start_driving(uint8_t* satnav) {
         game<TrackerFn>(RVA_END_ROUTE)(tracker);
         return logf("autodrive: the AI didn't take the car");
     }
-    g_drive   = {car, tracker, route, 0, false, false};
+    g_drive   = {car, tracker, route, false};
     g_driving = true;
     logf("autodrive on");
 }
@@ -289,24 +302,24 @@ void start_event_drive(uint8_t* car, void* route, bool allowed) {
     if (!allowed) return logf("autodrive: not here (context %d, presentation %d)", g_context, presentation_mode());
     if (driver_mode(car) != kModePlayer) return logf("autodrive: the car isn't the player's to give");
     if (!set_ai(car, true)) return logf("autodrive: the AI didn't take the car");
-    g_drive   = {car, nullptr, route, 0, false, true};
+    g_drive   = {car, nullptr, route, true};
     g_driving = true;
     logf("autodrive on (the game's route, context %d)", g_context);
 }
 
-constexpr float kCinematicAfter = 3;   // seconds, as Extra Options
-
 // What both kinds of drive check each update, after their own. Why it ends; with a flash when
 // the player took over or it got there.
-void driving_tick(float dt) {
+void driving_tick() {
     if (g_drive.car != g_local_car.load()) return stop_driving("another car");
     if (driver_mode(g_drive.car) != kModeAi) return stop_driving("the AI let go");
     if (analog(0) > 0.1f || analog(1) > 0.1f) return stop_driving("gas / brake", true);
     if (std::fabs(steering()) > 0.15f) return stop_driving("steering", true);
     if (cinematic_on() && !game_driving_input() && !input_held()) return stop_driving("a menu opened");   // it'd be hidden
-    if (dt > 0 && dt <= 1) g_drive.elapsed += dt;
-    if (!g_drive.cinematic_tried && cinematic_wanted() && g_drive.elapsed >= kCinematicAfter) {
-        g_drive.cinematic_tried = true;
+    const bool down = cinematic_button_down(), pressed = down && !g_drive.button_was;
+    g_drive.button_was = down;
+    if (pressed && cinematic_on()) {
+        cinematic_stop(true);
+    } else if (pressed && (game_driving_input() || input_held())) {
         if (!cinematic_start()) logf("autodrive: the cinematic camera isn't available here");
     } else {
         cinematic_tick();
@@ -314,7 +327,7 @@ void driving_tick(float dt) {
 }
 
 // The sat-nav's update: its route (the one the player set).
-void drive_tick(uint8_t* satnav, float dt) {
+void drive_tick(uint8_t* satnav) {
     if (g_drive.event) return;   // the car's update has it
     // While the game set a route for the car, that's the one: the car's update starts it.
     if (!g_drive.car && g_event_car.load() && g_event_car.load() == g_local_car.load()) return;
@@ -328,11 +341,11 @@ void drive_tick(uint8_t* satnav, float dt) {
     if (arrived) return stop_driving("arrived", true);
     if (route != g_drive.route) return stop_driving("the route changed", true);
     if (!free_roam()) return stop_driving("not free roam");
-    driving_tick(dt);
+    driving_tick();
 }
 
 // The player's car's update: the route the game set (an event's, a race's).
-void event_tick(uint8_t* car, float dt) {
+void event_tick(uint8_t* car) {
     const bool roam = free_roam();
     g_roam          = roam || g_context == 2;   // paused in free roam is still free roam
     if (g_drive.car && !g_drive.event) {   // a sat-nav drive's on
@@ -359,7 +372,30 @@ void event_tick(uint8_t* car, float dt) {
     if (!route) return stop_driving("the route went", true);
     if (route != g_drive.route) return stop_driving("the route changed", true);
     if (!ok) return stop_driving("not here");
-    driving_tick(dt);
+    driving_tick();
+}
+
+// ---- Nitro System ---------------------------------------------------------------------------
+// No NOS while ANNA drives: Nitro System (FnFNitro.dll) blocks it while any mod asks it to
+// (src/NitroSystemControl.h, its "NitroSystem.Control" interface), for us as "FH2ANNA". Looked up
+// once every mod has started; without it, nothing.
+std::atomic<const NitroSystemControl*> g_nos{nullptr};
+std::atomic<bool> g_nos_blocked{false};
+
+DWORD WINAPI find_nitro_system(LPVOID) {
+    g_api->wait_for_mods(10000);
+    if (auto* nos = static_cast<const NitroSystemControl*>(g_api->get_interface(NITROSYSTEM_CONTROL_NAME, NITROSYSTEM_CONTROL_VERSION))) {
+        g_nos = nos;
+        logf("Nitro System found: no NOS while ANNA drives");
+    }
+    return 0;
+}
+
+// Each update: NOS blocked while autodrive's on, allowed again once it's off.
+void nos_tick() {
+    const NitroSystemControl* nos = g_nos.load();
+    const bool want               = g_driving.load();
+    if (nos && g_nos_blocked.exchange(want) != want) nos->set_blocked("FH2ANNA", want ? 1 : 0);
 }
 
 // ---- the hooks ------------------------------------------------------------------------------
@@ -371,17 +407,17 @@ bool signals_guarded(uint8_t* car) {
         return false;
     }
 }
-bool event_guarded(uint8_t* car, float dt) {
+bool event_guarded(uint8_t* car) {
     __try {
-        event_tick(car, dt);
+        event_tick(car);
         return true;
     } __except (EXCEPTION_EXECUTE_HANDLER) {
         return false;
     }
 }
-bool drive_guarded(uint8_t* satnav, float dt) {
+bool drive_guarded(uint8_t* satnav) {
     __try {
-        drive_tick(satnav, dt);
+        drive_tick(satnav);
         return true;
     } __except (EXCEPTION_EXECUTE_HANDLER) {
         return false;
@@ -401,12 +437,12 @@ uintptr_t d_car_update(void* car, float dt, float frame_dt, unsigned frame) {
     const bool mine = car && car == g_local_car.load();
     if (!failed && mine && !signals_guarded(static_cast<uint8_t*>(car))) failed = true, logf("the signals crashed; off");
     static bool event_failed = false;
-    if (!event_failed && mine && !event_guarded(static_cast<uint8_t*>(car), dt)) {
+    if (!event_failed && mine && !event_guarded(static_cast<uint8_t*>(car))) {
         event_failed = true, g_event_car = nullptr, g_event_ready = false;
         if (g_drive.event) g_drive = {}, g_driving = false;
         logf("autodrive on the game's routes crashed; off");
     }
-    if (mine) note_headlights(car), apply_headlights(car);
+    if (mine) note_headlights(car), apply_headlights(car), nos_tick();
     const uintptr_t r = o_car_update(car, dt, frame_dt, frame);
     if (mine) apply_headlights(car);
     return r;
@@ -416,7 +452,8 @@ uintptr_t d_satnav_update(void* satnav, float dt) {
     const uintptr_t r = o_satnav_update(satnav, dt);
     static bool failed = false;
     g_satnav = static_cast<uint8_t*>(satnav);
-    if (!failed && !drive_guarded(static_cast<uint8_t*>(satnav), dt)) failed = true, g_driving = false, logf("autodrive crashed; off");
+    if (!failed && !drive_guarded(static_cast<uint8_t*>(satnav))) failed = true, g_driving = false, logf("autodrive crashed; off");
+    nos_tick();
     return r;
 }
 
@@ -469,6 +506,7 @@ bool hook_drive() {
         {"ANNA: the pause (autodrive)", RVA_PAUSE_ENTER, reinterpret_cast<void*>(&d_pause_enter), reinterpret_cast<void**>(&o_pause_enter)},
         {"ANNA: an event's start (autodrive)", RVA_EVENT_ENTER, reinterpret_cast<void*>(&d_event_enter), reinterpret_cast<void**>(&o_event_enter)},
     };
+    if (HANDLE t = CreateThread(nullptr, 0, find_nitro_system, nullptr, 0, nullptr)) CloseHandle(t);
     bool all = true;
     for (H& h : hooks) {
         FH2Hook* k = g_api->hook_function(g_mod, h.name, g_base + h.rva, h.detour, h.original);

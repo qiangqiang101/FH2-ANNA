@@ -1,14 +1,17 @@
-// Autodrive's cinematic camera (Extra Options' FH3 branch's, ported): a few seconds into an
-// autodrive, slow orbiting replay shots of the car with the HUD hidden; the camera and the HUD
-// come back when it ends.
+// Autodrive's cinematic camera (Extra Options' FH3 branch's, ported): while ANNA drives, its button
+// (LB unless FH2ANNA.ini's [Autodrive] Cinematic says another, or None) turns it on (drive.cpp),
+// slow orbiting replay shots of the car with the HUD hidden; the camera and the HUD come back with
+// the button again or when the drive ends.
 #pragma once
 #include "common.h"
 
 namespace fh2anna {
 
-void cinematic_settings();          // its ini value and Mods page row (from fh2mod_init)
-bool hook_cinematic();              // the UI's drawing, to hide it (from start)
-bool cinematic_wanted();            // the setting's on
+bool hook_cinematic();              // the replay cameras' FOV (from start)
+
+void cinematic_settings();          // its button, from the ini (from fh2mod_init)
+uint16_t cinematic_button();        // its XInput bit; 0: None, no cinematic camera
+const char* cinematic_button_name();   // "LB", "RB", "A"... (FH2's ControllerIcons/Controller_<name>.png)
 
 bool cinematic_start();             // the shots, the HUD hidden, a flash: false if the camera can't
 void cinematic_tick();              // the next shot when one ends

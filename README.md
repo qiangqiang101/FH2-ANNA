@@ -8,7 +8,7 @@ FH2 ANNA is a mod for the [FH2 Mod Platform](https://github.com/Trinculo54/fh2-m
 
 **Car**
 
-- **Enable Auto Drive**: the car drives itself along your GPS route. Greyed out until a route is set. A few seconds in, the camera switches to slow cinematic shots and the HUD hides; touch the gas, brake or steering to take over. Works online too.
+- **Enable Auto Drive**: the car drives itself along your GPS route. Greyed out until a route is set. While it drives, the minimap's ring lights up and shows "Auto Drive On"; press LB (Shift with FH2 Mouse & Keyboard) to switch to slow cinematic shots: a narrower view, the HUD hidden and black letterbox bars sliding in at the top and bottom. ANNA's D-pad down does nothing until LB switches back. Nitro System's NOS is off while it drives. Touch the gas, brake or steering to take over. Works online too.
 - **Lights**: headlights, hazard lights, left and right indicators. Headlights shine in daylight too, and pop-up headlights open and close with them.
 - **Doors**: open or close all, the roof, hood, trunk, each door, storage compartments, pop-up headlights and active spoilers, whatever the car can move. The Lights and Doors lists stay open so you can flip things back and forth.
 - **Tune Car**: opens the game's tuning screen, as the pause menu's Tune Car tile does (backing out of it leaves you on the pause menu).
@@ -70,13 +70,12 @@ On **Pause > Settings > MODS**:
 
 | Setting | Default | Does |
 |---|---|---|
-| Autodrive cinematic camera | On | The cinematic shots and hidden HUD during Auto Drive |
 | Hide hood and trunk in ANNA | Off | Leaves the hood and trunk out of Doors, and Open All leaves them shut: for cars with an invisible trunk or a fake engine |
 | Close doors when moving | On | The doors, hood, trunk and storage ANNA opened shut by themselves once the car drives off (the roof stays as it is) |
 | Start Matchmaking in ANNA | On | Shows the Start Matchmaking for list |
 | Voice commands | Off | Listens to the microphone for "ANNA" and a command (see Voice commands) |
 
-They're saved in `fh2-mods\FH2ANNA.ini`.
+They're saved in `fh2-mods\FH2ANNA.ini`. That file also has the Auto Drive cinematic camera's button, `Cinematic=LB` under `[Autodrive]`: LB, RB, A, B, X, Y, View, L3 or R3, or None for no cinematic camera. With FH2 Mouse & Keyboard, its "ANNA: cinematic camera" key (Left Shift) presses that button, whichever it is, and the prompt shows the key.
 
 ## With other mods
 

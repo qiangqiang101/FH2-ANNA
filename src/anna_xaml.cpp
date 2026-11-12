@@ -134,6 +134,8 @@ bool platform_page_needs_bom(const char* bytes, int length) {
     return MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, bytes, length, nullptr, 0) > 0;   // UTF-8 indeed
 }
 
+bool letterbox(std::string& s);   // the HUD page's (below)
+
 void edit(void** out) {
     const char* bytes = nullptr;
     int length        = 0;
@@ -143,6 +145,13 @@ void edit(void** out) {
         std::string text(kBom, 3);
         text.append(bytes, static_cast<std::size_t>(length));
         if (replace_resource(out, text) && !logged.exchange(true)) logf("a Mods page with UTF-8 text: given its BOM, so it shows as written");
+        return;
+    }
+    if (has(bytes, std::min(length, 2048), "x:Class=\"ForzaUI.A_Hud\"")) {   // the HUD page: its letterbox
+        std::string text(bytes, static_cast<std::size_t>(length));
+        static std::atomic<bool> logged{false};
+        if (!letterbox(text)) logf("the HUD page's XAML isn't as expected: the cinematic camera keeps the HUD");
+        else if (replace_resource(out, text) && !logged.exchange(true)) logf("the HUD page has the cinematic camera's letterbox");
         return;
     }
     if (!has(bytes, std::min(length, 2048), "x:Class=\"ForzaUI.HUDAnnaControl\"")) return;
@@ -156,6 +165,7 @@ void edit(void** out) {
         text.assign(p, port_size);
         static const char marker[] = "<!--FH2ANNA_OFF-->";   // greyed-out entries' triggers go here
         if (const std::size_t at = text.find(marker); at != std::string::npos) text.replace(at, sizeof marker - 1, disabled_triggers());
+        hint_texts(text);
         // The greyed-out entries' labels are in the game's language: UTF-8, which the loader reads
         // as such only after a BOM (as Extra Options writes its pages); without one, a byte a character.
         text.insert(0, kBom, 3);
@@ -236,6 +246,52 @@ std::string ring_opacity(const char* value) {
     return std::string("\r\n                        <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty=\"(UIElement.Opacity)\" "
                        "Storyboard.TargetName=\"FH2ANNA_Ring\"><DiscreteDoubleKeyFrame KeyTime=\"0:0:0\" Value=\"") +
            value + "\"/></DoubleAnimationUsingKeyFrames>";
+}
+
+// The HUD page (Scenes/Anthem/A_Hud.xaml) while autodrive's cinematic camera is on: its controls
+// hidden, and a letterbox, two black bars sliding in from above and below the picture. ANNA's
+// display mode (an int) is 4 then (fh2anna.cpp, kModeCinematic); the page reads it from ANNA's
+// control (HUDStatusAnna): its status's AnnaDisplayMode, or the same on the control's Tag
+// (tools/port_anna_xaml.py). The controls' Grid and the bars go in a Grid of their own, the
+// ZPanel's one child (the HUD's layer, drawn tilted a little: each bar reaches past the edges).
+constexpr int kBar = 130, kBeyond = 200;   // a bar's height on the 1080-high page; how far past the edges
+
+// Two triggers, one for each way of reading the mode: `inside` in each.
+std::string cinematic_triggers(const std::string& inside) {
+    return "<DataTrigger Binding=\"{Binding DataContext.AnnaDisplayMode, ElementName=HUDStatusAnna}\" Value=\"4\">" + inside + "</DataTrigger>"
+           "<DataTrigger Binding=\"{Binding Tag, ElementName=HUDStatusAnna}\"><DataTrigger.Value><System:Int32>4</System:Int32></DataTrigger.Value>" +
+           inside + "</DataTrigger>";
+}
+
+std::string bar(bool top) {
+    const int h = kBar + kBeyond, from = top ? -h : h;
+    return std::string("\r\n                <Rectangle Fill=\"Black\" Height=\"") + std::to_string(h) + "\" VerticalAlignment=\"" + (top ? "Top" : "Bottom") +
+           "\" Margin=\"" + (top ? "-200,-200,-200,0" : "-200,0,-200,-200") + "\" IsHitTestVisible=\"False\">"
+           "<Rectangle.RenderTransform><TranslateTransform Y=\"" + std::to_string(from) + "\"/></Rectangle.RenderTransform>"
+           "<Rectangle.Style><Style TargetType=\"{x:Type Rectangle}\"><Setter Property=\"Visibility\" Value=\"Collapsed\"/><Style.Triggers>" +
+           cinematic_triggers("<Setter Property=\"Visibility\" Value=\"Visible\"/><DataTrigger.EnterActions><BeginStoryboard><Storyboard>"
+                              "<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty=\"(UIElement.RenderTransform).(TranslateTransform.Y)\">"
+                              "<DiscreteDoubleKeyFrame KeyTime=\"0:0:0\" Value=\"" + std::to_string(from) + "\"/>"
+                              "<EasingDoubleKeyFrame KeyTime=\"0:0:0.6\" Value=\"0\" EasingFunction=\"{StaticResource FH2ANNA_LetterboxEase}\"/>"
+                              "</DoubleAnimationUsingKeyFrames></Storyboard></BeginStoryboard></DataTrigger.EnterActions>") +
+           "</Style.Triggers></Style></Rectangle.Style></Rectangle>";
+}
+
+bool letterbox(std::string& s) {
+    if (s.find("FH2ANNA_Letterbox") != std::string::npos) return true;   // already
+    const std::string zpanel = "<local:ZPanel x:Name=\"LayoutRoot\"", zpanel_end = "</local:ZPanel>",
+                      grid   = "<Grid Width=\"{StaticResource A_Double_SceneWidth}\"";
+    const std::size_t z = s.find(zpanel), z_end = z == std::string::npos ? z : s.find('>', z), g = s.find(grid, z),
+                      g_end = g == std::string::npos ? g : s.find('>', g), e = s.rfind(zpanel_end);
+    if (z_end == std::string::npos || g_end == std::string::npos || e == std::string::npos || e < g_end) return false;
+    // From the end: the bars after the controls' Grid, and the Grid round both closed; the controls'
+    // Grid hidden; the Grid round both opened, with the bars' ease.
+    s.insert(e, "    <Grid x:Name=\"FH2ANNA_Letterbox\" IsHitTestVisible=\"False\">" + bar(true) + bar(false) +
+                    "\r\n            </Grid>\r\n        </Grid>\r\n    ");
+    s.insert(g_end + 1, "\r\n            <Grid.Style><Style TargetType=\"{x:Type Grid}\"><Style.Triggers>" +
+                            cinematic_triggers("<Setter Property=\"Visibility\" Value=\"Hidden\"/>") + "</Style.Triggers></Style></Grid.Style>");
+    s.insert(g, "<Grid>\r\n        <Grid.Resources><CircleEase x:Key=\"FH2ANNA_LetterboxEase\" EasingMode=\"EaseOut\"/></Grid.Resources>\r\n        ");
+    return true;
 }
 
 } // namespace

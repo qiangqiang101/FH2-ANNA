@@ -12,15 +12,20 @@
 //
 // The flash: 0xFDDAE0(view, 3, 0.6) is the game's white flash between cameras.
 //
-// The HUD: the UI draws through Application::Render's wait (0x1140ED0), draw (0x15B51A0) and
-// present (0x15B5110), each reached only through a vtable slot (and the base classes' copies:
-// Extra Options takes those slots, so the functions are hooked, inline); while hidden,
-// they do nothing but let go of what they're handed. That hides every page, the HUD's and the
-// menus': the pause and an event's start stop the autodrive (drive.cpp), which brings it back.
+// The field of view: each update the director asks its active camera (+0x208) for its FOV (its
+// vtable +0x70) and keeps it (+0x2A0, its own +0x70's answer, 0xFE62BB). The relative cameras'
+// (0x392FC0: a camera they wrap's, +0x738, or their own +0x7B8) is hooked in their vtable's slot:
+// while the cinematic camera is on, its relative camera's is 30% narrower (its value is the
+// other way round: larger is narrower).
+//
+// The HUD and the letterbox: the HUD page's own XAML (anna_xaml.cpp, letterbox()): while ANNA's
+// display mode is kModeCinematic (fh2anna.cpp sets it while cinematic_on()), the HUD's controls
+// hide and two black bars slide in at the top and the bottom.
 #include "cinematic.h"
 #include "lang.h"
 
 #include <atomic>
+#include <cmath>
 #include <string>
 #include <vector>
 
@@ -38,7 +43,6 @@ constexpr uintptr_t RVA_SET_GROUP      = 0xFE5780;   // (director, group)
 constexpr uintptr_t RVA_REPLAY_SHOT    = 0xFE5E30;   // (director, label)
 constexpr uintptr_t RVA_RELATIVE_SLOT4 = 0x3979A0;   // the relative cameras' vtable +0x20
 constexpr uintptr_t RVA_FLASH          = 0xFDDAE0;   // (view, 3, 0.6f)
-constexpr uintptr_t RVA_FREE_OBJECT    = 0x257730;
 constexpr int kGroupRelative = 13;
 constexpr unsigned char kShotA = 17, kShotB = 19;
 constexpr size_t kShot = 0x4D0;
@@ -48,7 +52,6 @@ using SetFn    = void (*)(void* director, int group);
 using ShotFn   = void (*)(void* director, unsigned char label);
 using FlashFn  = void (*)(void* view, int kind, float seconds);
 using GetFn    = void* (*)(void* self);
-using FreeFn   = void (*)(void* obj);
 
 template <class T> bool get(const void* p, T* out) {
     if (!p || !readable(p, sizeof(T))) return false;
@@ -250,37 +253,19 @@ bool restore() {
     return restored;
 }
 
-// ---- the HUD ---------------------------------------------------------------------------------
-std::atomic<bool> g_hidden{false};
-std::atomic<bool> g_hud_hooked{false};
+// ---- the field of view ------------------------------------------------------------------------
+constexpr uintptr_t RVA_RELATIVE_FOV = 0x392FC0;   // the relative cameras' vtable +0x70
+constexpr float kFovScale            = 1.f / 0.7f; // 30% narrower
+using FovFn            = float (*)(void* camera);
+FovFn o_relative_fov   = nullptr;
+std::atomic<void*> g_narrow{nullptr};   // the relative camera that's narrower now
+
+float d_relative_fov(void* camera) {
+    const float fov = o_relative_fov(camera);
+    return camera && camera == g_narrow.load() && std::isfinite(fov) ? fov * kFovScale : fov;
+}
+
 std::atomic<bool> g_on{false};
-std::atomic<bool> g_wanted{true};
-std::wstring g_ini;
-
-using WaitFn    = void (*)(void* renderer, void* surface, void* parameters);
-using DrawFn    = void (*)(void* app, void* screen, void* transform);
-using PresentFn = void (*)(void* app, void* transform);
-constexpr uintptr_t RVA_UI_WAIT    = 0x1140ED0;   // (renderer, surface, parameters)
-constexpr uintptr_t RVA_UI_DRAW    = 0x15B51A0;   // (application, screen, transform)
-constexpr uintptr_t RVA_UI_PRESENT = 0x15B5110;   // (application, transform)
-WaitFn o_wait       = nullptr;
-DrawFn o_draw       = nullptr;
-PresentFn o_present = nullptr;
-
-void d_wait(void* renderer, void* surface, void* parameters) {
-    if (!g_hidden.load()) return o_wait(renderer, surface, parameters);
-    // the graphics wrapper's Release is at +0x18
-    if (void* owned = *static_cast<void**>(surface)) (*reinterpret_cast<void (***)(void*)>(owned))[3](owned);
-}
-void d_draw(void* app, void* screen, void* transform) {
-    if (!g_hidden.load()) return o_draw(app, screen, transform);
-    // Render takes the screen it's handed even when it draws nothing
-    auto* root = *static_cast<uint8_t**>(screen);
-    if (root && InterlockedDecrement(reinterpret_cast<volatile LONG*>(root + 0x10)) == 0) game<FreeFn>(RVA_FREE_OBJECT)(root);
-}
-void d_present(void* app, void* transform) {
-    if (!g_hidden.load()) o_present(app, transform);
-}
 
 bool start_guarded() {
     __try {
@@ -313,61 +298,60 @@ void flash_guarded(void* camera) {
     }
 }
 
-void setting_changed(void*, const char*, int value) {
-    g_wanted = value != 0;
-    WritePrivateProfileStringW(L"Autodrive", L"Cinematic", value ? L"1" : L"0", g_ini.c_str());
-}
+// Its button: FH2ANNA.ini's [Autodrive] Cinematic, a pad button's name (the d-pad's and the
+// triggers' aren't: ANNA, the radio and the car have those), or None. Before, it was 1 / 0 (the
+// camera on by itself a few seconds in, or not): either is LB now, written back as such.
+struct Button {
+    const char* name;
+    uint16_t bit;
+};
+const Button kButtons[] = {{"LB", 0x0100}, {"RB", 0x0200}, {"A", 0x1000}, {"B", 0x2000}, {"X", 0x4000},
+                           {"Y", 0x8000}, {"View", 0x0020}, {"L3", 0x0040}, {"R3", 0x0080}};
+Button g_button = kButtons[0];
 
 } // namespace
 
 void cinematic_settings() {
-    g_ini   = std::wstring(g_api->azimuth_dir) + L"\\fh2-mods\\FH2ANNA.ini";
-    g_wanted = GetPrivateProfileIntW(L"Autodrive", L"Cinematic", 1, g_ini.c_str()) != 0;
-    if (g_api->api_version < 4) return;
-    FH2Setting s{};
-    s.size        = sizeof s;
-    s.key         = "AutodriveCinematic";
-    s.label       = tr("Autodrive cinematic camera");
-    s.description = tr("A few seconds into ANNA's autodrive, the camera turns to slow orbiting shots of the car and the HUD hides. Taking over brings them back.");
-    s.value       = g_wanted.load() ? 1 : 0;
-    s.on_change   = setting_changed;
-    g_api->add_setting(g_mod, &s);
+    const std::wstring ini = std::wstring(g_api->azimuth_dir) + L"\\fh2-mods\\FH2ANNA.ini";
+    wchar_t value[32]      = {};
+    GetPrivateProfileStringW(L"Autodrive", L"Cinematic", L"", value, 32, ini.c_str());
+    std::string v;
+    for (const wchar_t* c = value; *c; ++c) v += *c < 0x80 ? static_cast<char>(*c) : '?';
+    bool known = false;
+    if (!_stricmp(v.c_str(), "None")) g_button = {"None", 0}, known = true;
+    for (const Button& b : kButtons)
+        if (!_stricmp(v.c_str(), b.name)) g_button = b, known = true;
+    if (!known) {   // missing, the old 1 / 0, or not a button: LB
+        if (!v.empty() && v != "0" && v != "1") logf("FH2ANNA.ini: Cinematic=%s isn't a button (LB, RB, A, B, X, Y, View, L3, R3, None): LB", v.c_str());
+        g_button = kButtons[0];
+        WritePrivateProfileStringW(L"Autodrive", L"Cinematic", L"LB", ini.c_str());
+    }
+    logf("autodrive's cinematic camera: %s", g_button.bit ? g_button.name : "none");
 }
 
+uint16_t cinematic_button() { return g_button.bit; }
+const char* cinematic_button_name() { return g_button.name; }
+
 bool hook_cinematic() {
-    // The functions themselves, inline: Extra Options takes their vtable slots (for its own
-    // autodrive's) and calls them on, so these still run. Nothing but those slots reaches them.
-    struct F {
-        uintptr_t rva;
-        const char* name;
-        void* detour;
-        void** out;
-    } fns[] = {
-        {RVA_UI_WAIT, "ANNA: the UI's render wait (cinematic)", reinterpret_cast<void*>(&d_wait), reinterpret_cast<void**>(&o_wait)},
-        {RVA_UI_DRAW, "ANNA: the UI's draw (cinematic)", reinterpret_cast<void*>(&d_draw), reinterpret_cast<void**>(&o_draw)},
-        {RVA_UI_PRESENT, "ANNA: the UI's present (cinematic)", reinterpret_cast<void*>(&d_present), reinterpret_cast<void**>(&o_present)},
-    };
-    std::vector<FH2Hook*> made;
-    for (const F& f : fns) {
-        FH2Hook* h = g_api->hook_function(g_mod, f.name, g_base + f.rva, f.detour, f.out);
-        if (!h) {
-            logf("the UI's drawing isn't as expected: the cinematic camera keeps the HUD");
-            return false;   // the ones made stay off
-        }
-        made.push_back(h);
+    // The relative cameras' FOV, in their vtable's slot (as long as it's still the game's own).
+    auto** slot = reinterpret_cast<void**>(g_base + RVA_RELATIVE_VT + 0x70);
+    FH2Hook* fov = *slot == g_base + RVA_RELATIVE_FOV
+                       ? g_api->hook_pointer(g_mod, "ANNA: the replay cameras' FOV (cinematic)", slot, reinterpret_cast<void*>(&d_relative_fov),
+                                             reinterpret_cast<void**>(&o_relative_fov))
+                       : nullptr;
+    if (!fov || !g_api->enable_hooks(g_mod, fov)) {
+        logf("the replay cameras' FOV isn't as expected: the cinematic camera keeps its own");
+        return false;
     }
-    for (FH2Hook* h : made) g_api->enable_hooks(g_mod, h);
-    g_hud_hooked = true;
     return true;
 }
 
-bool cinematic_wanted() { return g_wanted.load(); }
 bool cinematic_on() { return g_on.load(); }
 
 bool cinematic_start() {
     if (g_on.load() || !start_guarded()) return false;
     g_on = true;
-    if (g_hud_hooked.load()) g_hidden = true;
+    if (o_relative_fov) g_narrow = g_saved.relative;
     flash_guarded(g_saved.camera);
     logf("autodrive: cinematic camera");
     return true;
@@ -379,7 +363,7 @@ void cinematic_tick() {
 
 void cinematic_stop(bool with_flash) {
     if (!g_on.exchange(false)) return;
-    g_hidden      = false;
+    g_narrow      = nullptr;
     void* camera  = nullptr;
     const bool ok = restore_guarded(&camera);
     if (with_flash && ok) flash_guarded(camera);

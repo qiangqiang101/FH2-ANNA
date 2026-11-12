@@ -27,6 +27,8 @@ bool input_held();
 // The row template's triggers for greyed-out entries (as the control's XAML is read), and from
 // then on only those can be greyed out.
 std::string disabled_triggers();
+// The autodrive prompts' text (the row template's FH2ANNA_TEXT_ tokens), in the game's language.
+void hint_texts(std::string& xaml);
 
 // anna_xaml.cpp: FH3's look for the HUD's ANNA control, as its XAML is read.
 bool hook_anna_xaml();

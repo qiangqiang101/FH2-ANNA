@@ -38,6 +38,7 @@ RESOURCES = '''
                  here by name and shows its keys in them -->
             <ImageSource x:Key="FH2ANNA_Icon_Open">/ForzaUI;component/Textures/Data_Bound/ControllerIcons/Controller_DPadDown.png</ImageSource>
             <ImageSource x:Key="FH2ANNA_Icon_Choose">/ForzaUI;component/Textures/Data_Bound/ControllerIcons/Controller_DPadRight.png</ImageSource>
+            <ImageSource x:Key="FH2ANNA_Icon_Cinematic">/ForzaUI;component/Textures/Data_Bound/ControllerIcons/Controller_LB.png</ImageSource>
             <Style x:Key="FH2ANNA_Text" TargetType="{x:Type local:FZTextBlock}" BasedOn="{StaticResource A_Style_FZTextBlock_HudMedium}">
                 <Setter Property="FontSize" Value="26" />
             </Style>
@@ -159,6 +160,97 @@ LISTENING = ('                    <DataTrigger Binding="{Binding Command}" Value
              '                        <Setter TargetName="Dpad" Property="Visibility" Value="Hidden" />\n'
              '                    </DataTrigger>\n')
 
+# ANNA driving (autodrive on): awake, the ring lit, as FH3's, its one row drawn as nothing; for its
+# first seconds that row is a prompt instead, at the bottom of the screen where the game's own
+# ("Press A to...", HUDPressButtonControl) are, centred on the screen.
+# Where that row is: the control is at 54, 92 from the HUD's bottom left (A_Hud.xaml), its
+# LayoutRoot ROOT from that, the list's Canvas OPTIONS from that; with the header (no height) and
+# one 0-high row (1.5 above and below), the list's middle, LIST_UP above the Canvas, is the row's top.
+SCREEN_W     = 1920
+HUD_LEFT, HUD_BOTTOM           = 54, 92
+ROOT_LEFT, ROOT_BOTTOM         = 59, -30
+OPTIONS_LEFT, OPTIONS_BOTTOM   = 146, 135
+ROW_X = HUD_LEFT + ROOT_LEFT + OPTIONS_LEFT + LIST_LEFT            # from the screen's left
+ROW_Y = HUD_BOTTOM + ROOT_BOTTOM + OPTIONS_BOTTOM + LIST_UP        # from the screen's bottom
+HINT_W, HINT_H = 1600, 60
+HINT_Y   = 88          # the prompt's middle, from the screen's bottom: level with ANNA's label
+HINT_PT  = 40
+HINTS    = [('FH2ANNA_HINT_CINEMATIC', 'HintCinematic', 'FH2ANNA_Icon_Cinematic', 'CINEMATIC'),
+            ('FH2ANNA_HINT_ANNA', 'HintAnna', 'FH2ANNA_Icon_Open', 'ANNA')]
+
+
+def awake(text, panel=None):
+    """ANNA awake for autodrive: its row drawn as nothing (or as the prompt `panel`), and the
+    "Auto Drive On" tag on the minimap."""
+    t = ('                    <DataTrigger Binding="{Binding Command}" Value="' + text + '">\n'
+         '                        <Setter TargetName="Row" Property="Height" Value="0" />\n'
+         '                        <Setter TargetName="Back" Property="Visibility" Value="Hidden" />\n'
+         '                        <Setter TargetName="Label" Property="Visibility" Value="Collapsed" />\n'
+         '                        <Setter TargetName="Dpad" Property="Visibility" Value="Hidden" />\n')
+    for name in [panel, 'AutoDriveOn']:
+        if name:
+            t += '                        <Setter TargetName="' + name + '" Property="Visibility" Value="Visible" />\n'
+    return t + '                    </DataTrigger>\n'
+
+
+# The "Auto Drive On" tag: on the minimap's ring, just above ANNA's label (its middle 145 from the
+# control's left, 36 high from its bottom), in the row's coordinates (its top left: the ring's
+# centre, 146 and 135 from the control's bottom left, then LIST_LEFT right and LIST_UP up).
+TAG_W, TAG_H = 400, 34
+TAG_BOTTOM   = 39      # from the control's bottom: the label's 36 and 3 between
+TAG_BACK     = '#33383838'   # the rows' grey at 20%: nearly see-through
+
+
+def autodrive_tag():
+    left = 145 - (146 + LIST_LEFT) - TAG_W / 2
+    top = (135 + LIST_UP) - TAG_BOTTOM - TAG_H
+    text = lambda token, colour: ('                              <local:FZTextBlock Text="' + token + '" Style="{StaticResource FH2ANNA_Text}" '
+                                  'FontSize="25" Color="' + colour + '" Margin="4,-1,4,1" VerticalAlignment="Center" />\n')
+    return ('                    <Canvas Width="0" Height="0" HorizontalAlignment="Left" VerticalAlignment="Top">\n'
+            '                        <Grid x:Name="AutoDriveOn" Visibility="Collapsed" Canvas.Left="%g" Canvas.Top="%g" Width="%d" Height="%d">\n' % (left, top, TAG_W, TAG_H) +
+            '                          <Border Background="' + TAG_BACK + '" CornerRadius="9" Padding="8,0,8,0" HorizontalAlignment="Center">\n'
+            '                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">\n' +
+            text('FH2ANNA_TEXT_AUTODRIVE', '{StaticResource A_Color_HUD_Text_NoBackground}') + text('FH2ANNA_TEXT_ON', '{StaticResource A_Color_Minimap_EdgeActive}') +
+            '                            </StackPanel>\n'
+            '                          </Border>\n'
+            '                        </Grid>\n'
+            '                    </Canvas>\n')
+
+
+def hint_panels():
+    """The prompts: text, the button's picture, text. FH2 ANNA puts the text in, in the game's
+    language, as it loads this (src/fh2anna.cpp, hint_texts): FH2ANNA_TEXT_<name>_BEFORE / _AFTER."""
+    left = SCREEN_W / 2 - ROW_X - HINT_W / 2
+    top = ROW_Y - HINT_Y - HINT_H / 2
+    text = lambda token: ('                            <local:FZTextBlock Text="' + token + '" Style="{StaticResource FH2ANNA_Text}" '
+                          'FontSize="' + str(HINT_PT) + '" Color="{StaticResource A_Color_HUD_Text_NoBackground}" VerticalAlignment="Center" />\n')
+    t = '                    <Canvas Width="0" Height="0" HorizontalAlignment="Left" VerticalAlignment="Top">\n'
+    for _, panel, icon, name in HINTS:
+        t += ('                        <Grid x:Name="' + panel + '" Visibility="Collapsed" Canvas.Left="%g" Canvas.Top="%g" '
+              'Width="%d" Height="%d">\n' % (left, top, HINT_W, HINT_H) +
+              '                          <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">\n' +
+              text('FH2ANNA_TEXT_' + name + '_BEFORE') +
+              '                            <local:FZMaterial ImageSource="{StaticResource ' + icon + '}" Width="' + str(HINT_PT) + '" '
+              'Height="' + str(HINT_PT) + '" Margin="10,0,10,0" Color="White" VerticalAlignment="Center" />\n' +
+              text('FH2ANNA_TEXT_' + name + '_AFTER') +
+              '                          </StackPanel>\n'
+              '                        </Grid>\n')
+    return t + '                    </Canvas>\n'
+
+
+# Autodrive's cinematic camera (FH2 ANNA's display mode 4 while it's on, src/fh2anna.cpp): the
+# HUD's controls hide (the HUD page's, src/anna_xaml.cpp, which has the letterbox; ANNA's own here).
+CINEMATIC = 4
+
+
+def hide_when_cinematic(t, key):
+    """ANNA's parts with this style hide while the cinematic camera's on, too."""
+    start = t.index('<Style x:Key="' + key + '"')
+    at = t.index('<Style.Triggers>', start) + len('<Style.Triggers>')
+    return t[:at] + ('\n                    <DataTrigger Binding="{Binding AnnaDisplayMode}" Value="%d">\n'
+                     '                        <Setter Property="Visibility" Value="Collapsed" />\n'
+                     '                    </DataTrigger>' % CINEMATIC) + t[at:]
+
 
 def row_template():
     index = '{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}'
@@ -211,7 +303,7 @@ def row_template():
             'Color="' + ON_THEME + '" Visibility="Hidden">\n'
             '                        <local:FZMaterial ImageSource="{StaticResource FH2ANNA_Icon_Choose}" '
             'Width="28" Height="28" Color="White" />\n'
-            '                    </local:FZMaterial>\n'
+            '                    </local:FZMaterial>\n' + hint_panels() + autodrive_tag() +
             '                </Grid>\n'
             '                <DataTemplate.Triggers>\n'
             '                    <DataTrigger Binding="{Binding IsSelected}" Value="True">\n'
@@ -222,7 +314,8 @@ def row_template():
             # disabled entries ("FH2ANNA_OFF:" and their label): FH2 ANNA puts their triggers here as
             # it loads this (src/fh2anna.cpp, disabled_triggers), after the highlight's, so they win
             '                    <!--FH2ANNA_OFF-->\n' + more('FH2ANNA_MORE_UP', 'MoreUp') +
-            more('FH2ANNA_MORE_DOWN', 'MoreDown') + more('FH2ANNA_MORE_NONE', None) + LISTENING + triggers +
+            more('FH2ANNA_MORE_DOWN', 'MoreDown') + more('FH2ANNA_MORE_NONE', None) + LISTENING + awake('FH2ANNA_AWAKE') +
+            ''.join(awake(text, panel) for text, panel, _, _ in HINTS) + triggers +
             '                </DataTemplate.Triggers>\n'
             '            </DataTemplate>')
 
@@ -279,7 +372,8 @@ def port(t):
     b = block.index('</local:CommonListBox>') + len('</local:CommonListBox>')
     listbox = block[a:b]
     t = t[:start] + ('<Canvas x:Name="HUDAnnaControl_ANNAOptions" Style="{StaticResource A_Style_FrameworkElement_HideIfMapOnly}" '
-                     'HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="0" Height="0" Margin="146,0,0,135">\n'
+                     'HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="0" Height="0" '
+                     'Margin="%d,0,0,%d">\n' % (OPTIONS_LEFT, OPTIONS_BOTTOM) +
                      '            <Grid Canvas.Left="' + str(LIST_LEFT) + '" Canvas.Top="' + str(-500 - LIST_UP) + '" Height="1000">\n'
                      '                <StackPanel x:Name="ANNAMain" Orientation="Vertical" VerticalAlignment="Center" Width="' + str(ROW_W + 3 + DPAD) + '">\n'
                      '                    ' + listbox.replace('<local:CommonListBox ', '<local:CommonListBox AlternationCount="' + str(MAX_ROWS) + '" ', 1) + '\n'
@@ -294,7 +388,13 @@ def port(t):
     t = t.replace('HZ3_SFX_HUD_ANNA_Select_01', 'HZ2_SFX_HUD_ANNA_Wake_01').replace('HZ3_SFX_HUD_ANNA_', 'HZ2_SFX_HUD_ANNA_')
     # where FH3's HUD puts it
     t = sub(t, '<Grid x:Name="LayoutRoot" Style="{StaticResource A_Style_FrameworkElement_HideIfOff}">',
-            '<Grid x:Name="LayoutRoot" Style="{StaticResource A_Style_FrameworkElement_HideIfOff}" Margin="59,0,0,-30">')
+            '<Grid x:Name="LayoutRoot" Style="{StaticResource A_Style_FrameworkElement_HideIfOff}" '
+            'Margin="%d,0,0,%d">' % (ROOT_LEFT, ROOT_BOTTOM))
+    # the cinematic camera: ANNA's parts hidden, and the mode on the control's Tag, for the HUD page
+    # (src/anna_xaml.cpp: its controls hide by it, and it has the letterbox)
+    t = hide_when_cinematic(t, 'A_Style_FrameworkElement_HideIfMapOnly')
+    t = hide_when_cinematic(t, 'A_Style_FrameworkElement_HideIfANNAOnly')
+    t = sub(t, '    x:Name="UserControl"\n', '    x:Name="UserControl"\n    Tag="{Binding AnnaDisplayMode}"\n')
     return t
 
 

@@ -83,6 +83,11 @@ constexpr uintptr_t ITEM_SELECTED     = 0x40;
 constexpr uintptr_t ITEM_COMMAND      = 0x38;
 constexpr int kModeMapOnly            = 2;   // Options/Map's "on" on PC
 constexpr int kModeAnna               = 3;   // the map and ANNA (asleep until opened)
+// Not the game's: while autodrive's cinematic camera is on. The HUD page's XAML (anna_xaml.cpp)
+// hides the HUD's controls and shows the letterbox then. The game itself only reads and sets the
+// mode in HUDAnnaComponent's update (0x74D7FD, 0x74D80F, both ours).
+constexpr int kModeCinematic          = 4;
+int g_game_mode                       = -1;   // the mode the game last asked for (the HUD's thread); -1 not yet
 constexpr DWORD kChosenMs             = 700;   // ANNA shows a choice this long, then closes
 constexpr DWORD kIdleMs               = 10000; // and closes by itself after this long untouched
 
@@ -200,6 +205,7 @@ struct Menu {
 } g_menu;
 std::atomic<bool> g_open{false};    // for the input update's thread
 uint8_t* g_status = nullptr;        // the HUD's ANNA, for ANNA's own entries
+const char* g_awake = nullptr;      // awake while autodrive's on (not open): its row; null otherwise
 
 std::vector<Entry> entries_of(const std::string& parent) {
     std::scoped_lock lk{g_entries_mu};
@@ -365,6 +371,7 @@ void listen_menu(uint8_t* status) {
     g_menu.touched   = GetTickCount();
     g_open           = true;
     g_menu.listening = true;
+    g_awake          = nullptr;
     g_menu.list.clear();
     g_menu.title.clear();
     g_menu.shown.clear();
@@ -381,6 +388,7 @@ void open_menu(uint8_t* status) {
     g_menu.close_at = 0;
     g_menu.touched  = GetTickCount();
     g_open          = true;
+    g_awake         = nullptr;
     show_list(status, "");
 }
 
@@ -393,12 +401,71 @@ bool run_guarded(FH2AnnaChooseFn fn, void* user, const char* key) {
     }
 }
 
+// ---- ANNA driving ---------------------------------------------------------------------------
+// While autodrive is on, ANNA stays awake (its ring lit, as FH3's), not open: the pad is the
+// game's, and D-pad down opens the list as ever. Its one row is drawn as nothing, or, for the
+// first seconds, as a prompt at the bottom of the screen (tools/port_anna_xaml.py): LB for the
+// cinematic camera (its button: cinematic.cpp), then D-pad down for ANNA, to turn autodrive off.
+const char kAwake[]          = "FH2ANNA_AWAKE";
+const char kHintCinematic[]  = "FH2ANNA_HINT_CINEMATIC";
+const char kHintAnna[]       = "FH2ANNA_HINT_ANNA";
+constexpr DWORD kHintMs      = 5000;   // each prompt shows this long
+DWORD g_driving_since        = 0;
+
+bool anna_shown(int mode) { return mode == kModeAnna || mode == kModeCinematic; }
+bool awake_wanted(uint8_t* status) { return autodriving() && anna_shown(o_get_mode(status)); }
+
+// The mode for what the game asked for: ANNA with the map; the cinematic camera's while it's on.
+int mode_for(int game) {
+    if (cinematic_on()) return kModeCinematic;
+    return game == kModeMapOnly ? kModeAnna : game;
+}
+
+const char* awake_row() {
+    const DWORD t = GetTickCount() - g_driving_since;
+    if (!cinematic_button()) return t < kHintMs ? kHintAnna : kAwake;   // no cinematic camera
+    return t < kHintMs ? kHintCinematic : t < 2 * kHintMs ? kHintAnna : kAwake;
+}
+
+// Awake, with `row`: from asleep it wakes (ShowFull: its sound, its ring); from open, or another
+// row, the row's text changes where it is.
+void show_awake(uint8_t* status, const char* row) {
+    g_menu.list.clear();
+    g_menu.title.clear();
+    g_menu.shown.clear();
+    g_menu.off.clear();
+    g_menu.texts = {row};
+    g_first      = 0;
+    fill_window(status);
+    void* prop = game<PropFn>(RVA_SELECTED_PROP)();
+    for (uint8_t* item : g_menu.items)   // a row that was highlighted, kept
+        if (item[ITEM_SELECTED]) item[ITEM_SELECTED] = 0, game<NotifyFn>(RVA_ITEM_NOTIFY)(item, prop);
+    g_menu.items.clear();
+    g_awake = row;
+}
+
+void sleep_anna(uint8_t* status) {
+    game<StatusFn>(RVA_STATUS_SLEEP)(status);
+    game<StatusFn>(RVA_STATUS_CLEAR)(status);
+    g_awake = nullptr;
+}
+
+// Each HUD update while ANNA isn't open: awake while it drives, the prompt as it is by now.
+void awake_tick(uint8_t* status) {
+    if (!awake_wanted(status)) {
+        if (g_awake) sleep_anna(status);
+        return;
+    }
+    const char* row = awake_row();
+    if (row != g_awake) show_awake(status, row);
+}
+
 void close_menu(uint8_t* status) {
     g_menu.listening = false;
     g_menu.items.clear();   // before the list lets them go
     g_menu.shown.clear();
-    game<StatusFn>(RVA_STATUS_SLEEP)(status);
-    game<StatusFn>(RVA_STATUS_CLEAR)(status);
+    if (awake_wanted(status)) show_awake(status, awake_row());   // back to driving: still awake
+    else sleep_anna(status);
     g_menu.open     = false;
     g_menu.close_at = 0;
     g_open          = false;
@@ -803,7 +870,7 @@ void read_pad(uint8_t* input) {
         if (up_at) {
             const DWORD held = GetTickCount() - up_at;
             if (release & kOpenPad) {
-                if (held < kTapMs) g_ask |= kAskOpen;
+                if (held < kTapMs && !cinematic_on()) g_ask |= kAskOpen;   // the cinematic camera's: ignored till it ends
                 up_at = 0;
             } else if (held < kTapMs) {
                 hide(input, kOpenPad);   // not yet the game's: it may be a tap
@@ -960,26 +1027,39 @@ void tick(uint8_t* status) {
         g_menu.items.clear();
         g_menu.shown.clear();
         g_menu.open = false, g_menu.chosen = false, g_menu.close_at = 0;
-        g_open = false;
-        g_ask  = 0;
+        g_open      = false;
+        g_ask       = 0;
+        g_awake     = nullptr;
+        g_game_mode = -1;
     }
     g_status  = status;
     void* car = player_car();
     note_local_car(car);
     log_car_events(car);
     if (g_close_moving.load()) close_doors_if_moving(car);
+    static bool was_driving = false;   // autodrive's start: its prompts from then
+    if (autodriving() && !was_driving) g_driving_since = GetTickCount();
+    was_driving = autodriving();
     nearest_search_tick(status);
     voice_tick(status);
     // The update only sets the mode when it differs from the Options/Map setting (2 on PC), so the
-    // first time it's set here; after that the update's own sets are kept at it (d_set_mode).
-    if (o_get_mode(status) == kModeMapOnly) o_set_mode(status, kModeAnna);
+    // first time it's set here, and as the cinematic camera starts and ends; the update's own sets
+    // are kept at it (d_set_mode).
+    if (const int now = o_get_mode(status); g_game_mode < 0 && now != kModeCinematic) g_game_mode = now;
+    if (g_game_mode >= 0 && mode_for(g_game_mode) != o_get_mode(status)) {
+        const int to = mode_for(g_game_mode);
+        if (to == kModeCinematic || o_get_mode(status) == kModeCinematic) logf("the HUD: %s", to == kModeCinematic ? "the cinematic camera's (letterbox)" : "back");
+        o_set_mode(status, to);
+    }
     uint32_t ask = g_ask.exchange(0);
-    if (o_get_mode(status) != kModeAnna) {   // the map is off: so is ANNA
+    if (!anna_shown(o_get_mode(status))) {   // the map is off: so is ANNA
         if (g_menu.open) close_menu(status);
+        if (g_awake) sleep_anna(status);
         return;
     }
     if (!g_menu.open) {
         if (ask & (kAskOpen | kAskToggle)) open_menu(status);
+        else awake_tick(status);
         return;
     }
     const DWORD now = GetTickCount();
@@ -1027,9 +1107,10 @@ int d_get_mode(uint8_t* status) {
 }
 
 // With the minimap on, ANNA's label shows under it as in FH3, its list only while open. The map
-// off is off.
+// off is off. While the cinematic camera's on, the HUD is its (kModeCinematic).
 void d_set_mode(uint8_t* status, int mode) {
-    if (mode == kModeMapOnly) mode = kModeAnna;
+    g_game_mode = mode;
+    mode        = mode_for(mode);
     if (mode == o_get_mode(status)) return;
     o_set_mode(status, mode);
 }
@@ -1041,7 +1122,8 @@ std::atomic<bool> g_input_held{false};
 void api_hold_input(int held) {
     if (g_input_held.exchange(held != 0) != (held != 0)) logf(held ? "a mod holds the driving input: autodrive goes on" : "the driving input's given back");
 }
-const FH2AnnaApi kApi = {sizeof(FH2AnnaApi), &api_is_open, &api_uses_key, &add_entry, &api_hold_input};
+uint16_t api_cinematic_button() { return autodriving() ? cinematic_button() : 0; }
+const FH2AnnaApi kApi = {sizeof(FH2AnnaApi), &api_is_open, &api_uses_key, &add_entry, &api_hold_input, &api_cinematic_button};
 
 DWORD WINAPI start(LPVOID) {
     g_base = static_cast<uint8_t*>(g_api->wait_for_code(0xFFFFFFFFu));
@@ -1071,7 +1153,7 @@ DWORD WINAPI start(LPVOID) {
         logf("the game's input update isn't as expected: nothing opens ANNA");
         return 0;
     }
-    if (!hook_cinematic()) logf("autodrive's cinematic camera keeps the HUD on");
+    hook_cinematic();
     g_ready = true;
     if (g_voice.load()) voice_enable(true);
     logf("ready: a tap of D-pad down opens ANNA (keys: a keyboard mod's, on the pad's buttons)");
@@ -1120,6 +1202,42 @@ std::string disabled_triggers() {
     return x;
 }
 
+void hint_texts(std::string& xaml) {
+    // The cinematic camera's button's picture (FH2ANNA_Icon_Cinematic, LB's in the XAML): a keyboard
+    // mod (FH2Mouse) shows its key in it instead.
+    const std::string lb = "Controller_LB.png";
+    if (const std::size_t p = xaml.find(lb); p != std::string::npos && cinematic_button())
+        xaml.replace(p, lb.size(), std::string("Controller_") + cinematic_button_name() + ".png");
+    static const struct {
+        const char* name;
+        const char* english;   // {} where the button's picture goes
+    } kHints[] = {{"CINEMATIC", "Press {} to activate Cinematic Camera"}, {"ANNA", "Ask ANNA {} to disable Auto Drive"}};
+    auto trimmed = [](std::string s) {
+        while (!s.empty() && s.back() == ' ') s.pop_back();
+        while (!s.empty() && s.front() == ' ') s.erase(0, 1);
+        return s;
+    };
+    for (const auto& h : kHints) {
+        const std::string text = tr(h.english);
+        const std::size_t at   = text.find("{}");
+        const std::string parts[2] = {trimmed(text.substr(0, at)), at == std::string::npos ? std::string() : trimmed(text.substr(at + 2))};
+        const char* const ends[2]  = {"_BEFORE", "_AFTER"};
+        for (int i = 0; i < 2; ++i) {
+            const std::string token = std::string("FH2ANNA_TEXT_") + h.name + ends[i];
+            for (std::size_t p; (p = xaml.find(token)) != std::string::npos;) xaml.replace(p, token.size(), xml_escaped(parts[i]));
+        }
+    }
+    // the minimap's "Auto Drive On" tag
+    static const struct {
+        const char* token;
+        const char* english;
+    } kTexts[] = {{"FH2ANNA_TEXT_AUTODRIVE", "Auto Drive"}, {"FH2ANNA_TEXT_ON", "On"}};
+    for (const auto& x : kTexts) {
+        const std::string token = x.token, text = xml_escaped(tr(x.english));
+        for (std::size_t p; (p = xaml.find(token)) != std::string::npos;) xaml.replace(p, token.size(), text);
+    }
+}
+
 } // namespace fh2anna
 
 using namespace fh2anna;
@@ -1145,7 +1263,7 @@ FH2MOD_EXPORT int fh2mod_init(const FH2ModApi* api) {
     cinematic_settings();
     hood_trunk_setting();
     add_own_entries();
-    api->publish_interface(g_mod, FH2ANNA_INTERFACE, 5, &kApi);
+    api->publish_interface(g_mod, FH2ANNA_INTERFACE, 6, &kApi);
     if (HANDLE t = CreateThread(nullptr, 0, start, nullptr, 0, nullptr)) CloseHandle(t);
     return 0;
 }
