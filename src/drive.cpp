@@ -35,8 +35,10 @@
 #include "cinematic.h"
 #include "NitroSystemControl.h"
 
+#include <algorithm>
 #include <atomic>
 #include <cmath>
+#include <vector>
 
 namespace fh2anna {
 namespace {
@@ -258,6 +260,58 @@ bool tracker_ready(uint8_t* tracker, uint8_t* satnav) {
     return mine;
 }
 
+// ---- stopping at the destination -----------------------------------------------------------
+// Arrived, the AI lets go and the car would roll on: the brake's held for it instead (the game
+// reads the driving controls with GetAnalog(input, 0, control), 0 the gas, 1 the brake, as
+// FH2 Mouse & Keyboard's keys answer them; ours answer 0 and 1 there) till it's stopped, the
+// player takes over (gas, brake or steering, read past ours), or kBrakeMaxMs. GetDigital
+// (0x106E3E0) asks for the same controls; both are answered.
+constexpr float kStoppedSpeed = 0.3f;    // m/s
+constexpr DWORD kBrakeMaxMs   = 20000;
+std::atomic<void*> g_brake_car{nullptr};
+// m left to the route's end, as the blinkers last saw (-1 unknown): the game takes a route away
+// as the car gets there (a barn find's), so a route gone this close to its end is arrived at
+constexpr float kNearEnd = 250.f;
+std::atomic<float> g_route_left{-1.f};
+bool near_route_end() {
+    const float left = g_route_left.load();
+    return left >= 0.f && left <= kNearEnd;
+}
+DWORD g_brake_since = 0;
+AnalogFn o_get_analog = nullptr;
+AnalogFn o_get_digital = nullptr;   // GetDigital (0x106E3E0): the same controls, as FH2 Mouse answers both
+
+float braking(float v, int context, int control) {
+    if (context != 0 || !g_brake_car.load()) return v;
+    if (control == 1) return 1.f;
+    if (control == 0) return 0.f;
+    return v;
+}
+float d_get_digital(void* input, int context, int control) { return braking(o_get_digital(input, context, control), context, control); }
+
+float d_get_analog(void* input, int context, int control) { return braking(o_get_analog(input, context, control), context, control); }
+
+float player_analog(int control) {   // the player's own, past our brake
+    uint8_t* all = *reinterpret_cast<uint8_t**>(g_base + RVA_INPUTS);
+    void* input  = all ? *reinterpret_cast<void**>(all + INPUTS_CURRENT) : nullptr;
+    AnalogFn read = o_get_analog ? o_get_analog : game<AnalogFn>(RVA_GET_ANALOG);
+    return input ? read(input, 0, control) : 0.f;
+}
+
+void stop_braking(const char* why) {
+    if (g_brake_car.exchange(nullptr)) logf("autodrive: the brake's let go (%s)", why);
+}
+
+void brake_tick(uint8_t* car) {
+    void* braking = g_brake_car.load();
+    if (!braking) return;
+    if (braking != car) return stop_braking("another car");
+    if (player_analog(0) > 0.1f || player_analog(1) > 0.1f || std::fabs(player_analog(2)) > 0.15f) return stop_braking("the player drives");
+    const float speed = car_speed(car);
+    if (speed >= 0.f && speed < kStoppedSpeed) return stop_braking("stopped");
+    if (GetTickCount() - g_brake_since > kBrakeMaxMs) return stop_braking("it took too long");
+}
+
 // `flash`: the player ended it, or it got there: the camera comes back with a flash.
 void stop_driving(const char* why, bool flash = false) {
     if (!g_drive.car) return;
@@ -282,6 +336,7 @@ void start_driving(uint8_t* satnav) {
     if (!tracker_ready(tracker, satnav)) return logf("autodrive: the route isn't being tracked");
     game<TrackerFn>(RVA_BEGIN_ROUTE)(tracker);
     if (!*reinterpret_cast<void**>(tracker + 0x128)) return logf("autodrive: the route's tracking didn't begin");
+    stop_braking("autodrive's on again");
     if (!set_ai(car, true)) {
         game<TrackerFn>(RVA_END_ROUTE)(tracker);
         return logf("autodrive: the AI didn't take the car");
@@ -294,10 +349,18 @@ void start_driving(uint8_t* satnav) {
 void start_event_drive(uint8_t* car, void* route, bool allowed) {
     if (!allowed) return logf("autodrive: not here (context %d, presentation %d)", g_context, presentation_mode());
     if (driver_mode(car) != kModePlayer) return logf("autodrive: the car isn't the player's to give");
+    stop_braking("autodrive's on again");
     if (!set_ai(car, true)) return logf("autodrive: the AI didn't take the car");
     g_drive   = {car, nullptr, route, true};
     g_driving = true;
     logf("autodrive on (the game's route, context %d)", g_context);
+}
+
+// There: the AI lets go, and the brake's held till the car's stopped.
+void arrive() {
+    uint8_t* car = g_drive.car;
+    stop_driving("arrived", true);
+    if (car && o_get_analog) g_brake_since = GetTickCount(), g_brake_car = car, logf("autodrive: braking to a stop");
 }
 
 // What both kinds of drive check each update, after their own. Why it ends; with a flash when
@@ -331,7 +394,7 @@ void drive_tick(uint8_t* satnav) {
     if (!g_drive.car) return;
     bool arrived = false;
     void* route  = route_of(satnav, &arrived);
-    if (arrived) return stop_driving("arrived", true);
+    if (arrived || (route != g_drive.route && near_route_end())) return arrive();
     if (route != g_drive.route) return stop_driving("the route changed", true);
     if (!free_roam()) return stop_driving("not free roam");
     driving_tick();
@@ -362,10 +425,245 @@ void event_tick(uint8_t* car) {
     }
     if (g_want.exchange(false)) return stop_driving("asked", true);
     if (car != g_drive.car) return stop_driving("another car");
+    if (!route && near_route_end()) return arrive();
     if (!route) return stop_driving("the route went", true);
     if (route != g_drive.route) return stop_driving("the route changed", true);
     if (!ok) return stop_driving("not here");
     driving_tick();
+}
+
+// ---- blinkers -------------------------------------------------------------------------------
+// While ANNA drives, the indicator goes on ahead of a turn at a junction and off once it's taken.
+// A route (either kind): its length at +0x0C (a float), its nodes a vector of pointers at +0x18 /
+// +0x20, in driving order, each a road-network node with its position (x, height, z) at +0x14 and
+// two link counts at +0x20 / +0x24 that sum to more than 2 at a junction; the nodes' distances add
+// up to the length. The car's position at car +0x4F50 (its route tracking's). A turn is the change
+// of heading from kTurnSpan before a node to kTurnSpan after it (+ left, - right: the game's z
+// runs the other way to the map's); a bend in the road with no junction doesn't count.
+// Lane changes: the car's distance to the side of the route's line (+ left), measured every
+// kLaneEvery. Where it's been steady (sideways slower than kLaneCalm for kLaneCalmFor) is its lane;
+// moving away from it faster than kLaneOn and more than kLaneStart is a lane change that way, one
+// signal for it: off once it's kLaneDone over and steady, after kLaneMaxOn at most, or as soon as
+// it heads back. Then none till it's steady again and kLaneCooldown has passed, so weaving through
+// traffic isn't one long blink. Not near a junction's turn: that one's signalled.
+constexpr uintptr_t CAR_POSITION = 0x4F50;
+constexpr float kTurnSpan        = 30.f;    // m
+constexpr float kTurnDeg         = 30.f;    // a junction's turn from this
+constexpr float kAfterTurn       = 25.f;    // m past it, off
+constexpr float kLeadSeconds     = 5.f;     // on this long before it, at the speed now ...
+constexpr float kLeadMin         = 50.f;    // ... but at least this far (m)
+constexpr float kLeadMax         = 150.f;   // ... and at most
+constexpr DWORD kLaneEvery       = 100;     // ms
+constexpr float kLaneOn          = 1.5f;    // m/s sideways
+constexpr float kLaneCalm        = 0.6f;    // m/s
+constexpr float kLaneCalmFor     = 1.f;     // s
+constexpr float kLaneStart       = 1.2f;    // m from its lane
+constexpr float kLaneDone        = 2.5f;    // m: a lane over
+constexpr float kLaneSettled     = 0.4f;    // s steady there
+constexpr float kLaneMaxOn       = 3.f;     // s
+constexpr float kLaneCooldown    = 2.f;     // s from the last one's end
+constexpr float kLaneNearTurn    = 50.f;    // m either side of a junction's turn
+
+struct RouteNode {
+    float x, z;
+    float along;     // m from the route's start
+    int8_t turn;     // the indicator for it: +1 left, -1 right, 0 none
+};
+struct Blinkers {
+    void* route = nullptr;   // the one read (or found unreadable)
+    std::vector<RouteNode> nodes;
+    size_t at       = 0;       // the car's nearest node
+    bool ours       = false;   // the indicator on is ours (not the player's)
+    float off_at    = 0.f;     // ... off once the car's this far along
+    float speed     = 0.f;     // m/s, along the route
+    float last      = -1.f;    // the car's distance along, last measured
+    DWORD last_tick = 0;
+    // lane changes
+    int lane        = 0;       // the indicator on is for one: +1 left, -1 right
+    bool side_known = false;
+    float side      = 0.f;     // m to the left of the route's line (- right)
+    float sideways  = 0.f;     // m/s, smoothed
+    float lane_at   = 0.f;     // where its lane is (side), when `armed`
+    bool armed      = false;   // steady in a lane: a move from it is a lane change
+    float calm      = 0.f;     // s slower than kLaneCalm
+    float on_for    = 0.f;     // s the lane change's signal has been on
+    float settled   = 0.f;     // s steady a lane over
+    DWORD lane_off  = 0;       // when the last one's went off
+    DWORD side_tick = 0;
+} g_blink;                     // the player's car's update
+
+bool read_route(void* route, std::vector<RouteNode>& out) {
+    out.clear();
+    auto* r = static_cast<uint8_t*>(route);
+    if (!readable(r, 0x28)) return false;
+    const float length = *reinterpret_cast<float*>(r + 0x0C);
+    uint8_t** begin    = *reinterpret_cast<uint8_t***>(r + 0x18);
+    uint8_t** end      = *reinterpret_cast<uint8_t***>(r + 0x20);
+    if (!begin || end < begin + 2 || end - begin > 50000 || !readable(begin, (end - begin) * sizeof(void*))) return false;
+    if (!std::isfinite(length) || length <= 0.f) return false;
+    float along = 0.f, along3 = 0.f;
+    std::vector<bool> junction;
+    for (uint8_t** p = begin; p != end; ++p) {
+        if (!readable(*p, 0x28)) return false;
+        const float* pos = reinterpret_cast<const float*>(*p + 0x14);
+        if (!std::isfinite(pos[0]) || !std::isfinite(pos[1]) || !std::isfinite(pos[2])) return false;
+        if (!out.empty()) {
+            const float dx = pos[0] - out.back().x, dz = pos[2] - out.back().z;
+            const float dy = pos[1] - *reinterpret_cast<const float*>(*(p - 1) + 0x18);
+            along += std::sqrt(dx * dx + dz * dz);
+            along3 += std::sqrt(dx * dx + dy * dy + dz * dz);
+        }
+        out.push_back({pos[0], pos[2], along, 0});
+        junction.push_back(*reinterpret_cast<uint32_t*>(*p + 0x20) + *reinterpret_cast<uint32_t*>(*p + 0x24) > 2);
+    }
+    if (std::fabs(along3 - length) > length * 0.01f + 1.f) return false;   // not laid out as expected
+    const size_t n = out.size();
+    for (size_t i = 1; i + 1 < n; ++i) {
+        if (!junction[i]) continue;
+        size_t j = i, k = i;
+        while (j > 0 && out[i].along - out[j].along < kTurnSpan) --j;
+        while (k + 1 < n && out[k].along - out[i].along < kTurnSpan) ++k;
+        const float in  = std::atan2(out[i].z - out[j].z, out[i].x - out[j].x);
+        const float to  = std::atan2(out[k].z - out[i].z, out[k].x - out[i].x);
+        float turn      = (to - in) * 57.29578f;
+        while (turn > 180.f) turn -= 360.f;
+        while (turn < -180.f) turn += 360.f;
+        if (std::fabs(turn) >= kTurnDeg) out[i].turn = turn > 0 ? 1 : -1;
+    }
+    return true;
+}
+
+void blinker(int side) {   // 0: off
+    g_signal = side > 0 ? static_cast<int>(Signal::Left) : side < 0 ? static_cast<int>(Signal::Right) : 0;
+    if (!side) g_clear = true;
+}
+
+void blinkers_reset() { g_blink = {}; }
+
+void blinkers_off() {
+    g_route_left = -1.f;
+    if (g_blink.ours && (g_signal == static_cast<int>(Signal::Left) || g_signal == static_cast<int>(Signal::Right))) blinker(0);
+    g_blink = {};
+}
+
+// m to the left of the route's line near node `at` (- right)
+float lateral(const std::vector<RouteNode>& n, size_t at, float x, float z) {
+    float best = 1e30f, side = 0.f;
+    for (size_t i = at > 2 ? at - 2 : 0; i + 1 < n.size() && i <= at + 2; ++i) {
+        const float dx = n[i + 1].x - n[i].x, dz = n[i + 1].z - n[i].z, len2 = dx * dx + dz * dz;
+        if (len2 <= 0.f) continue;
+        const float t  = std::clamp(((x - n[i].x) * dx + (z - n[i].z) * dz) / len2, 0.f, 1.f);
+        const float px = n[i].x + t * dx - x, pz = n[i].z + t * dz - z;
+        const float d  = px * px + pz * pz;
+        if (d < best) best = d, side = (dx * (z - n[i].z) - dz * (x - n[i].x)) / std::sqrt(len2);
+    }
+    return side;
+}
+
+void lane_off(DWORD now) {   // the lane change's signal off, and wait for the car to be steady again
+    if (g_blink.lane) blinker(0), g_blink.ours = false, g_blink.lane_off = now;
+    g_blink.lane = 0, g_blink.armed = false, g_blink.calm = 0.f;
+}
+
+void lanes_tick(float x, float z, float along, DWORD now) {
+    if (now - g_blink.side_tick < kLaneEvery) return;
+    const float dt   = static_cast<float>(now - g_blink.side_tick) / 1000.f;
+    g_blink.side_tick = now;
+    const float side = lateral(g_blink.nodes, g_blink.at, x, z);
+    if (!g_blink.side_known || dt > 1.f) {   // the first, or after a pause
+        g_blink.side_known = true, g_blink.side = side, g_blink.sideways = 0.f;
+        return;
+    }
+    g_blink.sideways = g_blink.sideways * 0.7f + (side - g_blink.side) / dt * 0.3f;
+    g_blink.side     = side;
+    const float v    = g_blink.sideways;
+    for (const RouteNode& n : g_blink.nodes)
+        if (n.turn && std::fabs(n.along - along) < kLaneNearTurn) return lane_off(now);
+    if (!g_blink.lane) {
+        if (std::fabs(v) < kLaneCalm) {
+            g_blink.calm += dt;
+            if (g_blink.calm >= kLaneCalmFor)
+                g_blink.lane_at = side, g_blink.armed = now - g_blink.lane_off >= static_cast<DWORD>(kLaneCooldown * 1000.f);
+        } else {
+            g_blink.calm = 0.f;
+        }
+        const float moved = side - g_blink.lane_at;
+        if (!g_blink.armed || std::fabs(v) <= kLaneOn || std::fabs(moved) <= kLaneStart || moved * v <= 0.f) return;
+        g_blink.lane    = moved > 0.f ? 1 : -1;
+        g_blink.armed   = false;
+        g_blink.on_for  = g_blink.settled = 0.f;
+        logf("autodrive's blinkers: %s, a lane change", g_blink.lane > 0 ? "left" : "right");
+        blinker(g_blink.lane);
+        g_blink.ours = true;
+        return;
+    }
+    g_blink.on_for += dt;
+    const bool over = std::fabs(side - g_blink.lane_at) >= kLaneDone && std::fabs(v) < kLaneCalm;
+    g_blink.settled = over ? g_blink.settled + dt : 0.f;
+    if (g_blink.on_for >= kLaneMaxOn || v * static_cast<float>(g_blink.lane) < -kLaneOn || g_blink.settled >= kLaneSettled) lane_off(now);
+}
+
+void blinkers_tick(uint8_t* car) {
+    if (!g_driving.load() || car != g_drive.car || !g_drive.route) {
+        if (g_blink.route) blinkers_off();
+        return;
+    }
+    if (g_drive.route != g_blink.route) {
+        blinkers_off();
+        g_blink.route = g_drive.route;
+        if (!read_route(g_drive.route, g_blink.nodes)) {
+            g_blink.nodes.clear();
+            return logf("autodrive's blinkers: the route isn't laid out as expected; none");
+        }
+        size_t turns = 0;
+        for (const RouteNode& n : g_blink.nodes) turns += n.turn != 0;
+        logf("autodrive's blinkers: %zu turns at junctions on the route's %zu nodes", turns, g_blink.nodes.size());
+    }
+    std::vector<RouteNode>& nodes = g_blink.nodes;
+    if (nodes.empty()) return;
+    // the car's node: the nearest, from the last one on (all of them the first time)
+    const float* pos = reinterpret_cast<const float*>(car + CAR_POSITION);
+    const float cx = pos[0], cz = pos[2];
+    if (!std::isfinite(cx) || !std::isfinite(cz)) return;
+    const bool first  = g_blink.last < 0.f;
+    const size_t from = first ? 0 : (g_blink.at > 3 ? g_blink.at - 3 : 0);
+    const size_t to   = first ? nodes.size() : std::min(nodes.size(), g_blink.at + 40);
+    float best        = 1e30f;
+    for (size_t i = from; i < to; ++i) {
+        const float d = (nodes[i].x - cx) * (nodes[i].x - cx) + (nodes[i].z - cz) * (nodes[i].z - cz);
+        if (d < best) best = d, g_blink.at = i;
+    }
+    const float along = nodes[g_blink.at].along;
+    g_route_left      = nodes.back().along - along;
+    const DWORD now   = GetTickCount();
+    if (first) {
+        g_blink.last = along, g_blink.last_tick = now;
+    } else if (now - g_blink.last_tick >= 500) {
+        const float v   = (along - g_blink.last) * 1000.f / static_cast<float>(now - g_blink.last_tick);
+        g_blink.speed   = std::max(0.f, g_blink.speed * 0.5f + v * 0.5f);
+        g_blink.last    = along, g_blink.last_tick = now;
+    }
+    // the player's own indicator (or hazards) stays as it is
+    const int s = g_signal.load();
+    if (s && !g_blink.ours) return;
+    if (!s) g_blink.ours = false, g_blink.lane = 0;
+    const float lead = std::clamp(g_blink.speed * kLeadSeconds, kLeadMin, kLeadMax);
+    for (size_t i = g_blink.at; i < nodes.size() && nodes[i].along - along <= lead; ++i) {
+        if (!nodes[i].turn) continue;
+        const int want = nodes[i].turn > 0 ? static_cast<int>(Signal::Left) : static_cast<int>(Signal::Right);
+        if (s != want || g_blink.lane) logf("autodrive's blinkers: %s, a turn %.0f m ahead", nodes[i].turn > 0 ? "left" : "right", nodes[i].along - along);
+        blinker(nodes[i].turn);
+        g_blink.ours   = true;
+        g_blink.lane   = 0;
+        g_blink.off_at = nodes[i].along + kAfterTurn;
+        return;
+    }
+    if (g_blink.ours && !g_blink.lane) {   // a turn's
+        if (along < g_blink.off_at) return;
+        blinker(0);
+        g_blink.ours = false;
+    }
+    lanes_tick(cx, cz, along, now);
 }
 
 // ---- Nitro System ---------------------------------------------------------------------------
@@ -395,6 +693,23 @@ void nos_tick() {
 bool signals_guarded(uint8_t* car) {
     __try {
         signals_tick(car);
+        return true;
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
+        return false;
+    }
+}
+bool brake_guarded(uint8_t* car, bool mine) {
+    __try {
+        if (mine) brake_tick(car);
+        else if (!g_local_car.load()) stop_braking("no car");
+        return true;
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
+        return false;
+    }
+}
+bool blinkers_guarded(uint8_t* car) {
+    __try {
+        blinkers_tick(car);
         return true;
     } __except (EXCEPTION_EXECUTE_HANDLER) {
         return false;
@@ -435,7 +750,10 @@ uintptr_t d_car_update(void* car, float dt, float frame_dt, unsigned frame) {
         if (g_drive.event) g_drive = {}, g_driving = false;
         logf("autodrive on the game's routes crashed; off");
     }
+    static bool blinkers_failed = false;
+    if (!blinkers_failed && mine && !blinkers_guarded(static_cast<uint8_t*>(car))) blinkers_failed = true, blinkers_reset(), logf("autodrive's blinkers crashed; off");
     if (mine) note_headlights(car), apply_headlights(car), nos_tick();
+    if (g_brake_car.load() && !brake_guarded(static_cast<uint8_t*>(car), mine)) g_brake_car = nullptr;
     const uintptr_t r = o_car_update(car, dt, frame_dt, frame);
     if (mine) apply_headlights(car);
     return r;
@@ -498,6 +816,8 @@ bool hook_drive() {
         {"ANNA: the route tracking going", RVA_TRACKER_DTOR, reinterpret_cast<void*>(&d_tracker_dtor), reinterpret_cast<void**>(&o_tracker_dtor)},
         {"ANNA: the pause (autodrive)", RVA_PAUSE_ENTER, reinterpret_cast<void*>(&d_pause_enter), reinterpret_cast<void**>(&o_pause_enter)},
         {"ANNA: an event's start (autodrive)", RVA_EVENT_ENTER, reinterpret_cast<void*>(&d_event_enter), reinterpret_cast<void**>(&o_event_enter)},
+        {"ANNA: the driving controls (brake at the destination)", RVA_GET_ANALOG, reinterpret_cast<void*>(&d_get_analog), reinterpret_cast<void**>(&o_get_analog)},
+        {"ANNA: the driving buttons (brake at the destination)", 0x106E3E0, reinterpret_cast<void*>(&d_get_digital), reinterpret_cast<void**>(&o_get_digital)},
     };
     if (HANDLE t = CreateThread(nullptr, 0, find_nitro_system, nullptr, 0, nullptr)) CloseHandle(t);
     bool all = true;

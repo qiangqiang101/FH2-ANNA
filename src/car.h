@@ -12,6 +12,9 @@ void* player_car();                     // this frame's (not kept: the game may 
 bool headlights_on(void* car);
 void set_headlights(void* car, bool on);   // and the pop-up lights with them
 void apply_headlights(void* car);           // each update of the car (the game rewrites them)
+// While autodrive's on: the headlights on while it's dark round the car (a tunnel, the night),
+// then as they were; not if the player chose them in ANNA. Each HUD update.
+void dark_headlights_tick(void* car, bool driving);
 bool part_supported(void* car, Part p); // the car animates it
 bool part_open(void* car, Part p);      // as we last left it
 void set_part(void* car, Part p, bool open);

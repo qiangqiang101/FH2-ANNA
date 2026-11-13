@@ -1051,6 +1051,7 @@ void tick(uint8_t* status) {
     note_local_car(car);
     log_car_events(car);
     if (g_close_moving.load()) close_doors_if_moving(car);
+    dark_headlights_tick(car, autodriving());
     static bool was_driving = false;   // autodrive's start: its prompts from then
     if (autodriving() && !was_driving) g_driving_since = GetTickCount();
     was_driving = autodriving();
@@ -1259,7 +1260,7 @@ FH2MOD_EXPORT int fh2mod_init(const FH2ModApi* api) {
     info.size             = sizeof info;
     info.name             = "FH2 ANNA";
     info.version          = FH2ANNA_VERSION;
-    info.github_repo      = "qiangqiang101/FH2_ANNA";
+    info.github_repo      = "qiangqiang101/FH2-ANNA";
     info.platform_version = FH2MOD_PLATFORM_VERSION;
     info.check_updates    = 1;
     info.description      = "ANNA, the in-car assistant Forza Horizon 2 left on its HUD: a menu while you drive, that mods can add to.";

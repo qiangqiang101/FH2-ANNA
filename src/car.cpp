@@ -15,6 +15,7 @@
 // FH3's addresses.
 #include "car.h"
 
+#include <algorithm>
 #include <atomic>
 #include <cmath>
 #include <cstring>
@@ -167,12 +168,27 @@ bool headlights_on(void* car) {
     return c && (c[CAR_LIGHTS_OWN] ? c[CAR_LIGHTS_ON] : c[CAR_LIGHTS_AUTO]) != 0;
 }
 
-void set_headlights(void* car, bool on) {
-    if (!car) return;
+// Autodrive's, in the dark (dark_headlights_tick): what was there before, put back after.
+struct DarkLights {
+    void* car = nullptr;   // ours are on for the dark
+    uint8_t own = 0, on = 0;
+    DWORD at    = 0;       // it's been the other way since
+    bool taken  = false;   // something else switched ours: theirs till autodrive ends
+    float outside = -1.f;  // the light as it was outside, last
+    DWORD outside_tick = 0;
+} g_dark;
+
+void own_headlights(void* car, bool on) {
     g_lights_car = car;
     g_lights_on  = on;
     apply_headlights(car);
     if (part_supported(car, Part::PopupLights)) set_part(car, Part::PopupLights, on);
+}
+
+void set_headlights(void* car, bool on) {
+    if (!car) return;
+    g_dark.car = nullptr;   // the player's from now on
+    own_headlights(car, on);
     logf("car: headlights %s", on ? "on" : "off");
 }
 
@@ -326,6 +342,82 @@ void note_headlights(void* car) {
         return;
     }
     g_foreign = now;
+}
+
+// ---- the headlights in the dark (autodrive) --------------------------------------------------
+// The light where the car is: a scale in the game's global lighting (0x366101C, a float, beside
+// the sun's direction and the sky's colour) that drops to a fifth or less in a tunnel (0.0003
+// outside, 0.00006 inside, by day) and is back as the car comes out; the sky's own light (the
+// renderer's ambient colour) only follows the time of day. It's compared with what it was outside
+// (`outside`, the brightest lately): dark below kDark of it for kDarkFor, light again above kLight
+// of it for kLightFor (no flicker at a tunnel's mouth).
+constexpr uintptr_t RVA_ZONE_LIGHT = 0x366101C;
+constexpr float kDark              = 0.4f, kLight = 0.7f;
+constexpr DWORD kDarkFor           = 300, kLightFor = 1000;
+constexpr float kOutsideHalf       = 20.f;   // s
+
+float zone_light() {   // -1 if it can't be read
+    float v;
+    if (!peek(g_base + RVA_ZONE_LIGHT, &v) || !std::isfinite(v) || v < 0.f || v > 1000.f) return -1.f;
+    return v;
+}
+
+void dark_lights_off(void* car) {   // back as they were, if they're still ours for the dark
+    if (car && car == g_dark.car && car == g_lights_car) {
+        g_lights_car     = nullptr;
+        g_beams_renderer = nullptr;
+        game<LightsFn>(RVA_SET_LIGHTS_ON)(car, g_dark.on);
+        game<LightsFn>(RVA_SET_LIGHTS_OWN)(car, g_dark.own);
+        if (part_supported(car, Part::PopupLights) && !headlights_on(car)) set_part(car, Part::PopupLights, false);
+        logf("car: headlights back as they were (it's light)");
+    }
+    g_dark.car = nullptr;
+}
+
+void dark_headlights_tick(void* car, bool driving) {
+    if (g_dark.car && (!driving || car != g_dark.car)) {
+        dark_lights_off(g_dark.car == car ? car : nullptr);
+        return;
+    }
+    if (!driving || !car) {
+        g_dark.at = 0, g_dark.taken = false, g_dark.outside = -1.f;
+        return;
+    }
+    if (g_dark.car && car != g_lights_car) {   // switched elsewhere (note_headlights)
+        g_dark.car = nullptr, g_dark.taken = true;
+        return;
+    }
+    if (g_dark.taken) return;
+    const float light = zone_light();
+    if (light <= 0.f) return;
+    const bool on    = g_dark.car != nullptr;
+    const DWORD tick = GetTickCount();
+    // outside: the brightest lately, fading by half in kOutsideHalf (the light fades in over a
+    // moment at a tunnel's mouth: following it would follow it down); kept while ours are on
+    if (g_dark.outside <= 0.f) g_dark.outside = light;
+    if (!on) {
+        const float dt  = static_cast<float>(tick - g_dark.outside_tick) / 1000.f;
+        g_dark.outside  = std::max(light, g_dark.outside * std::exp2(-std::min(dt, 5.f) / kOutsideHalf));
+    }
+    g_dark.outside_tick = tick;
+    const bool other = on ? light > g_dark.outside * kLight : light < g_dark.outside * kDark;   // the other way to now
+    const DWORD now  = GetTickCount();
+    if (!other) {
+        g_dark.at = 0;
+        return;
+    }
+    if (!g_dark.at) g_dark.at = now;
+    if (now - g_dark.at < (on ? kLightFor : kDarkFor)) return;
+    g_dark.at = 0;
+    if (on) return dark_lights_off(car);
+    if (car == g_lights_car) return;   // the player chose them in ANNA: theirs
+    // even if the game has them on (its AI driver does in a tunnel): many cars' beams only show in
+    // the dark by their presets' daylight thresholds, and ours shine in daylight too
+    const auto* c = static_cast<const uint8_t*>(car);
+    g_dark.own = c[CAR_LIGHTS_OWN], g_dark.on = c[CAR_LIGHTS_ON];
+    own_headlights(car, true);
+    g_dark.car = car;
+    logf("car: headlights on (it's dark: %.6f, %.6f outside)", light, g_dark.outside);
 }
 
 // Where the game reads them for the lights: the car's update (inside ours), and also 0xF5C900
