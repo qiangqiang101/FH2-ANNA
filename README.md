@@ -1,5 +1,7 @@
 <h1 align="center">FH2 ANNA</h1>
 
+<p align="center">English | <a href="README.ZH.md">简体中文</a></p>
+
 **ANNA**, the in-car assistant from Forza Horizon 3/4/5/6, brought to **Forza Horizon 2** on PC (Azimuth). Forza Horizon 2 kept ANNA's HUD hidden away; FH2 ANNA turns it back on with Forza Horizon 3's look, round minimap, glowing edge and the list beside it, and fills it with things to do while you drive. Other mods can add their own entries to it.
 
 FH2 ANNA is a mod for the [FH2 Mod Platform](https://github.com/Trinculo54/fh2-mod-platform).
