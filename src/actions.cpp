@@ -161,8 +161,15 @@ double metres(const std::wstring& t) {
 bool hook_routes() {
     static const uint8_t ctor_bytes[] = {0x48, 0x89, 0x5C, 0x24, 0x08, 0x48, 0x89, 0x74, 0x24, 0x10, 0x57, 0x48, 0x83, 0xEC, 0x20};
     static const uint8_t dtor_bytes[] = {0x48, 0x89, 0x5C, 0x24, 0x08, 0x48, 0x89, 0x74, 0x24, 0x10, 0x48, 0x89, 0x7C, 0x24, 0x18};
-    if (std::memcmp(g_base + RVA_NAV_CTOR, ctor_bytes, sizeof ctor_bytes) ||
-        std::memcmp(g_base + RVA_NAV_DTOR, dtor_bytes, sizeof dtor_bytes))
+    // The game's bytes, or another mod's hook there first (Platform.NET hooks both): its 5-byte
+    // JMP over the first instruction (5 bytes in both) and the rest as the game has it. The
+    // platform chains hooks on one function, so ours goes on after it.
+    auto as_expected = [](const uint8_t* at, const uint8_t* bytes, std::size_t n) {
+        if (!std::memcmp(at, bytes, n)) return true;
+        return at[0] == 0xE9 && !std::memcmp(at + 5, bytes + 5, n - 5);
+    };
+    if (!as_expected(g_base + RVA_NAV_CTOR, ctor_bytes, sizeof ctor_bytes) ||
+        !as_expected(g_base + RVA_NAV_DTOR, dtor_bytes, sizeof dtor_bytes))
         return false;
     FH2Hook* a = g_api->hook_function(g_mod, "ANNA: the navigation module (made)", g_base + RVA_NAV_CTOR,
                                       reinterpret_cast<void*>(&d_nav_ctor), reinterpret_cast<void**>(&o_nav_ctor));
