@@ -269,6 +269,7 @@ bool tracker_ready(uint8_t* tracker, uint8_t* satnav) {
 constexpr float kStoppedSpeed = 0.3f;    // m/s
 constexpr DWORD kBrakeMaxMs   = 20000;
 std::atomic<void*> g_brake_car{nullptr};
+std::atomic<void*> g_handed{nullptr};    // an event's car ANNA let go of at the finish (event_tick)
 // m left to the route's end, as the blinkers last saw (-1 unknown): the game takes a route away
 // as the car gets there (a barn find's), so a route gone this close to its end is arrived at
 constexpr float kNearEnd = 250.f;
@@ -350,6 +351,7 @@ void start_event_drive(uint8_t* car, void* route, bool allowed) {
     if (!allowed) return logf("autodrive: not here (context %d, presentation %d)", g_context, presentation_mode());
     if (driver_mode(car) != kModePlayer) return logf("autodrive: the car isn't the player's to give");
     stop_braking("autodrive's on again");
+    g_handed = nullptr;
     if (!set_ai(car, true)) return logf("autodrive: the AI didn't take the car");
     g_drive   = {car, nullptr, route, true};
     g_driving = true;
@@ -400,6 +402,30 @@ void drive_tick(uint8_t* satnav) {
     driving_tick();
 }
 
+// The end of an event's drive the game brought about (the finish line: it takes the driving input
+// and the route for its finish, drives the car itself and shows the results): ANNA lets go
+// without touching anything, not the car's driver, the rewind or the brake, which would get in
+// the way of the game's finish (stuck there, the rewards 0). The car's the game's to give back;
+// if it's still the AI's once the player has the driving input again (free roam after the
+// results, or the event going on after a rewind), ANNA gives it back.
+
+void hand_to_game(const char* why) {
+    cinematic_stop(false);
+    g_handed  = g_drive.car;
+    g_drive   = {};
+    g_driving = false;
+    logf("autodrive off (%s): the car's the game's", why);
+}
+
+void handed_tick(uint8_t* car) {
+    void* handed = g_handed.load();
+    if (!handed) return;
+    if (car != handed) return void(g_handed = nullptr);
+    if (!game_driving_input()) return;   // the game's still finishing
+    g_handed = nullptr;
+    if (driver_mode(car) == kModeAi && set_ai(car, false)) logf("autodrive: the car's still the AI's after the event: the player's again");
+}
+
 // The player's car's update: the route the game set (an event's, a race's).
 void event_tick(uint8_t* car) {
     const bool roam = free_roam();
@@ -408,6 +434,7 @@ void event_tick(uint8_t* car) {
         g_event_car = nullptr, g_event_ready = false;
         return;
     }
+    handed_tick(car);
     void* route     = event_route(car, roam);
     const bool ok   = route && event_allowed(roam);
     g_event_car     = route ? car : nullptr;
@@ -425,6 +452,9 @@ void event_tick(uint8_t* car) {
     }
     if (g_want.exchange(false)) return stop_driving("asked", true);
     if (car != g_drive.car) return stop_driving("another car");
+    // in an event, the game ends it: its route going (or changing) and the input taken
+    if (!roam && (!route || route != g_drive.route)) return hand_to_game("the event's route ended");
+    if (!roam && !ok && !game_driving_input() && !input_held()) return hand_to_game("the game took the car");
     if (!route && near_route_end()) return arrive();
     if (!route) return stop_driving("the route went", true);
     if (route != g_drive.route) return stop_driving("the route changed", true);
